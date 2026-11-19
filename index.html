@@ -286,7 +286,7 @@ function makeBlockEl(b){
 function render(){
   renderTabs();
   canvas.innerHTML = '';
-  if(groups.length===0){ canvas.innerHTML = `<div class="emptyWrap">Clean page.<br>You are the builder.<br><button onclick="addGroup()">+ Create your first group</button><br><span style="font-size:13px">e.g. Plans, Travel, Ideas, Daily</span></div>`; return; }
+  if(groups.length===0){ canvas.innerHTML = `<div class="emptyWrap">Let's build the day!.<br><button onclick="addGroup()">+ Create your first group</button><br><span style="font-size:13px">e.g. Plans, Travel, Ideas, Daily</span></div>`; return; }
   if(!activeGroupId || !groups.find(g=>g.id===activeGroupId)) activeGroupId = groups[0].id;
   const g = groups.find(x=>x.id===activeGroupId);
   const mClone = tplMain.content.cloneNode(true);
