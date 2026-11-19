@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>SYC Todo</title>
+<meta name="theme-color" content="#FDFCFE">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="SYC Todo">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:#FDFCFE;color:#0F172A;overflow-x:hidden}
+  header{position:sticky;top:0;background:rgba(253,252,254,.92);backdrop-filter:blur(12px);border-bottom:1px solid #EDE9FE;padding:12px 16px 0;display:flex;flex-direction:column;gap:8px;z-index:10}
+  .headRow{display:flex;justify-content:space-between;align-items:flex-start}
+  .left{line-height:1.2}
+  #clock{font-size:12px;color:#64748B;font-weight:500}
+  #dateLine{font-size:16px;font-weight:700;letter-spacing:-.3px}
+  .top-btns{display:flex;gap:6px}
+  .top-btns button{border:1px solid #EDE9FE;background:#fff;padding:7px 11px;border-radius:99px;font-size:13px;cursor:pointer}
+  .top-btns button.primary{background:#6B8BB8;color:#fff;border-color:#6B8BB8}
+  #installBtn{display:none;background:#0F172A !important;color:#fff !important;border-color:#0F172A !important}
+  #groupTabs{display:flex;gap:8px;overflow-x:auto;padding:4px 0 12px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+  #groupTabs::-webkit-scrollbar{display:none}
+  .tab{flex-shrink:0;border:1px solid #EDE9FE;background:#fff;padding:8px 14px;border-radius:99px;font-size:14px;cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:6px}
+  .tab.active{background:#6B8BB8;color:#fff;border:none;box-shadow:2px 2px 4px rgba(107,139,184,0.25);font-weight:600}
+  .tab .dot{width:9px;height:9px;border-radius:99px;flex-shrink:0}
+  .tab .count{opacity:.7;font-size:12px;margin-left:2px}
+  #canvas{max-width:680px;margin:0 auto;padding:20px 16px 180px;display:flex;flex-direction:column;gap:16px;touch-action:pan-y}
+  .emptyWrap{background:#fff;border:1px dashed #DDD6FE;border-radius:16px;padding:40px 20px;text-align:center;color:#64748B;line-height:1.6}
+  .emptyWrap button{border:none;outline:none;background:#fff;color:#0F172A;padding:12px 18px;border-radius:99px;font-size:15px;cursor:pointer;margin-top:12px;box-shadow:2px 2px 4px rgba(107,139,184,0.25);font-weight:700}
+  .mainGroup{display:flex;flex-direction:column;gap:14px}
+  .mainHead{display:flex;align-items:center;gap:8px;padding:2px 4px}
+  .mainLabel{flex:1;outline:none;font-size:19px;font-weight:800;letter-spacing:-.3px;min-height:24px}
+  .mainLabel:empty:before{content:"Untitled group";color:#94A3B8}
+  .mainColorBtn{border:1px solid #EDE9FE;background:#fff;width:28px;height:28px;border-radius:99px;cursor:pointer}
+  .mainMenu{border:0;background:none;font-size:18px;color:#94A3B8;cursor:pointer}
+  .colorRow{display:none;gap:6px;padding:0 4px 4px;flex-wrap:wrap}
+  .mainGroup.showColors .colorRow{display:flex}
+  .colorRow button{width:26px;height:26px;border-radius:99px;border:2px solid #fff;box-shadow:0 0 0 1px #EDE9FE;cursor:pointer}
+  .colorRow button.on{box-shadow:0 0 0 2px #6B8BB8}
+  .subGroup{background:#fff;border:1px solid #EDE9FE;border-left:4px solid #6B8BB8;border-radius:16px;overflow:hidden}
+  .subHead{display:flex;gap:8px;align-items:center;padding:13px 14px 8px}
+  .subLabel{flex:1;outline:none;font-size:16px;font-weight:700;letter-spacing:-.2px;min-height:22px}
+  .subLabel:empty:before{content:"Untitled sub-group";color:#94A3B8}
+  .subCount{font-size:12px;color:#64748B;background:#FDFCFE;padding:4px 8px;border-radius:99px;border:1px solid #EDE9FE;cursor:pointer}
+  .subCount:active{background:#EDE9FE}
+  .subMenu{border:0;background:none;font-size:16px;color:#94A3B8;cursor:pointer}
+  .subBricks{display:flex;flex-direction:column;gap:6px;padding:0 10px 10px}
+  .subEmpty{color:#94A3B8;font-size:14px;padding:8px 6px}
+  .subAdd{display:flex;gap:6px;padding:0 10px 12px;flex-wrap:wrap}
+  .subAdd button{border:1px dashed #DDD6FE;background:#FDFCFE;padding:7px 11px;border-radius:99px;font-size:13px;cursor:pointer;color:#475569}
+  .doneSection{border-top:1px dashed #DDD6FE;margin:4px 10px 10px;padding-top:8px;display:flex;flex-direction:column;gap:6px}
+  .doneToggle{border:0;background:#FDFCFE;padding:8px 10px;border-radius:10px;font-size:13px;cursor:pointer;color:#64748B;text-align:left;width:100%}
+  .doneToggle b{color:#0F172A}
+  .doneList{display:flex;flex-direction:column;gap:6px}
+  .doneList.hidden{display:none}
+  .block{position:relative;display:flex;gap:8px;align-items:flex-start;padding:8px 10px;border-radius:12px;background:#FDFCFE;border:1px solid #EDE9FE;transition:.15s}
+  .block:hover{border-color:#DDD6FE;background:#fff}
+  .block.active{border-color:#6B8BB8;background:#fff;box-shadow:0 4px 16px rgba(107,139,184,.12)}
+  .block.dragging{opacity:.4;outline:2px dashed #6B8BB8}
+  .block .handle{cursor:grab;color:#C4B5FD;font-size:16px;padding-top:3px;user-select:none}
+  .block .content{flex:1;outline:none;min-height:22px;line-height:1.5;font-size:16px;white-space:pre-wrap;word-break:break-word}
+  .block[data-type="heading"]{background:transparent;border-color:transparent;padding:14px 10px 6px;box-shadow:none}
+  .block[data-type="heading"] .content{font-size:24px;font-weight:900;letter-spacing:-.6px;line-height:1.15;color:#0F172A}
+  .block[data-type="todo"] .content{font-size:16px;font-weight:400}
+  .block[data-type="note"]{background:#fff;border-color:#DDD6FE}
+  .block[data-type="note"] .content{font-size:15px;color:#334155;line-height:1.6;min-height:44px;font-weight:400}
+  .block[data-type="divider"]{background:transparent;border-color:transparent;padding:2px 10px}
+  .block[data-type="divider"] .content{border-top:1px solid #DDD6FE;height:1px;min-height:1px}
+  .block.done{opacity:1;background:#FDFCFE}
+  .block.done .content{color:#64748B;opacity:1;text-decoration:line-through;text-decoration-color:#64748B;text-decoration-thickness:1.5px}
+  .doneBtn{width:24px;height:24px;min-width:24px;margin-top:1px;border:1.5px solid #CBD5E1;background:#fff;border-radius:99px;cursor:pointer;font-size:13px;line-height:1;display:flex;align-items:center;justify-content:center;color:#fff;padding:0}
+  .doneBtn:active{background:#EDE9FE}
+  .block.done .doneBtn{background:#6B8BB8;border-color:#6B8BB8}
+  .undoBtn{border:1px solid #EDE9FE;background:#fff;font-size:12px;padding:6px 10px;border-radius:99px;cursor:pointer;color:#475569}
+  .block .del{opacity:0;border:0;background:none;color:#94A3B8;cursor:pointer;font-size:18px;padding:2px 4px}
+  .block:hover .del,.block.active .del{opacity:1}
+  .controls{display:none;flex-wrap:wrap;gap:4px;margin:6px 0 0 0}
+  .block.active .controls{display:flex}
+  .controls button{border:1px solid #EDE9FE;background:#fff;font-size:12px;padding:6px 10px;border-radius:99px;cursor:pointer}
+  .controls button.on{background:#6B8BB8;color:#fff;border-color:#6B8BB8}
+  .controls button.moveBtn{font-weight:700}
+  #addBar{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:transparent;border:none;padding:0;display:flex;flex-direction:column;gap:8px;align-items:center;z-index:20;box-shadow:none}
+  #addBar button{border:none;outline:none;padding:12px 22px;border-radius:99px;font-size:15px;cursor:pointer;background:#fff;color:#0F172A;font-weight:700;white-space:nowrap;box-shadow:2px 2px 4px rgba(107,139,184,0.25);width:100%;text-align:center}
+  #addBar button.primary{background:#6B8BB8;color:#fff}
+  #addBar button:active{box-shadow:1px 1px 2px rgba(107,139,184,0.25);transform:translateY(1px)}
+  #sheet{position:fixed;inset:0;background:rgba(15,35,90,.35);display:none;align-items:flex-end;justify-content:center;z-index:30}
+  #sheet.show{display:flex}
+  #sheetCard{background:#fff;width:100%;max-width:520px;border-radius:20px 20px 0 0;padding:18px}
+  #sheetCard button{width:100%;text-align:left;border:0;background:#FDFCFE;padding:13px;border-radius:12px;margin-top:8px;font-size:15px;cursor:pointer}
+  #iosHint{display:none;background:#0F172A;color:#fff;padding:10px 14px;border-radius:12px;font-size:13px;line-height:1.5;margin:0 16px 10px}
+  #iosHint b{color:#fff}
+</style>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXX"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());gtag('config','G-XXXX');</script>
+</head>
+<body>
+
+<header>
+  <div class="headRow">
+    <div class="left">
+      <div id="clock">--:--</div>
+      <div id="dateLine">Today</div>
+    </div>
+    <div class="top-btns">
+      <button id="installBtn" onclick="installApp()">↓ Install</button>
+      <button onclick="shareOut()">↗ Share</button>
+      <button class="primary" onclick="openSheet()">⋯ Ecosystem</button>
+    </div>
+  </div>
+  <div id="groupTabs"></div>
+</header>
+<div id="iosHint">On iPhone: tap <b>Share ↗</b> → <b>Add to Home Screen</b> to install SYC Todo.</div>
+
+<div id="canvas"></div>
+
+<div id="addBar">
+  <button class="primary" onclick="addGroup()">+ New Group</button>
+  <button onclick="addSubGroupToActive()">+ Sub-group</button>
+</div>
+
+<template id="tpl-main">
+  <div class="mainGroup" data-group-id="">
+    <div class="mainHead">
+      <div class="mainLabel" contenteditable="true"></div>
+      <button class="mainColorBtn" data-color-toggle="1">🎨</button>
+      <button class="mainMenu" data-group-del="1">⋯</button>
+    </div>
+    <div class="colorRow">
+      <button data-color="#6B8BB8" style="background:#6B8BB8"></button>
+      <button data-color="#8AB17D" style="background:#8AB17D"></button>
+      <button data-color="#C98A7A" style="background:#C98A7A"></button>
+      <button data-color="#C08AB5" style="background:#C08AB5"></button>
+      <button data-color="#9B8AC4" style="background:#9B8AC4"></button>
+      <button data-color="#C9B67A" style="background:#C9B67A"></button>
+      <button data-color="#7FB3C8" style="background:#7FB3C8"></button>
+      <button data-color="#8A9BA8" style="background:#8A9BA8"></button>
+    </div>
+    <div class="subGroupsWrap" style="display:flex;flex-direction:column;gap:14px"></div>
+  </div>
+</template>
+
+<template id="tpl-sub">
+  <section class="subGroup" data-sub-id="">
+    <div class="subHead">
+      <div class="subLabel" contenteditable="true"></div>
+      <span class="subCount" data-done-toggle="1"></span>
+      <button class="subMenu" data-sub-del="1">⋯</button>
+    </div>
+    <div class="subBricks"></div>
+    <div class="doneSection" style="display:none">
+      <button class="doneToggle" data-done-toggle="1"></button>
+      <div class="doneList hidden"></div>
+    </div>
+    <div class="subAdd">
+      <button data-add-in-sub="todo">+ Todo</button>
+      <button data-add-in-sub="note">+ Note</button>
+      <button data-add-in-sub="heading">+ Heading</button>
+      <button data-add-in-sub="divider">+ Divider</button>
+    </div>
+  </section>
+</template>
+
+<template id="tpl-block">
+  <div class="block" data-block-id="" data-type="todo" draggable="true">
+    <span class="handle">⠿</span>
+    <button class="doneBtn" data-done-btn="1" style="display:none">✓</button>
+    <div style="flex:1;min-width:0">
+      <div class="content" contenteditable="true"></div>
+      <div class="controls">
+        <button class="moveBtn" data-move="-1">↑</button>
+        <button class="moveBtn" data-move="1">↓</button>
+        <span class="todoControls" style="display:contents">
+          <button data-set-type="heading">Heading</button>
+          <button data-set-type="todo">Todo</button>
+          <button data-set-type="note">Note</button>
+          <button data-set-type="divider">Divider</button>
+          <button data-mark-done="1">✓ Done</button>
+        </span>
+        <span class="noteControls" style="display:none">
+          <button class="moveBtn" data-move="-1">↑</button>
+          <button class="moveBtn" data-move="1">↓</button>
+        </span>
+        <span class="doneControls" style="display:none">
+          <button class="undoBtn" data-undo-done="1">↩ Undo</button>
+          <button class="moveBtn" data-move="-1">↑</button>
+          <button class="moveBtn" data-move="1">↓</button>
+        </span>
+      </div>
+    </div>
+    <button class="del">×</button>
+  </div>
+</template>
+
+<div id="sheet" onclick="if(event.target===this) closeSheet()">
+  <div id="sheetCard">
+    <b style="font-size:18px">Send this page to...</b>
+    <button onclick="shareToSYC('letter')"><b>💌 Letter w Syc</b><br><span style="color:#64748B;font-size:13px">Turn your todos into a letter</span></button>
+    <button onclick="shareOut()"><b>↗ Share anywhere</b><br><span style="color:#64748B;font-size:13px">WhatsApp, Instagram, SMS</span></button>
+    <button onclick="closeSheet()" style="background:#fff;text-align:center;color:#64748B">Close</button>
+  </div>
+</div>
+
+<script>
+function tick(){
+  const d = new Date();
+  document.getElementById('clock').textContent = d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+  document.getElementById('dateLine').textContent = d.toLocaleDateString([], {weekday:'long', day:'numeric', month:'long'});
+}
+tick(); setInterval(tick, 30000);
+function getContentText(el){
+  if(!el) return '';
+  let out = '';
+  el.childNodes.forEach(node=>{
+    if(node.nodeType === 3) out += node.textContent;
+    else if(node.nodeName === 'BR') out += '\n';
+    else if(node.nodeName === 'DIV' || node.nodeName === 'P') out += getContentText(node) + '\n';
+    else out += node.textContent || '';
+  });
+  return out.replace(/\n+$/,'');
+}
+let groups = JSON.parse(localStorage.getItem('syc_todo_groups_v4') || 'null');
+if(!groups){
+  const old = JSON.parse(localStorage.getItem('syc_todo_groups_v3') || '[]');
+  if(old.length){
+    groups = old.map(g=>({
+      id: g.id, label: g.label, color: g.color || '#6B8BB8',
+      subGroups: [{id: uid(), label:'General', bricks: g.bricks || []}]
+    }));
+  } else {
+    groups = [];
+  }
+}
+function uid(){ return Math.random().toString(36).slice(2,9) }
+let activeGroupId = localStorage.getItem('syc_active_group') || (groups[0]?.id || null);
+let openDone = JSON.parse(localStorage.getItem('syc_open_done') || '{}');
+function save(){
+  localStorage.setItem('syc_todo_groups_v4', JSON.stringify(groups));
+  localStorage.setItem('syc_open_done', JSON.stringify(openDone));
+  if(activeGroupId) localStorage.setItem('syc_active_group', activeGroupId);
+}
+const canvas = document.getElementById('canvas');
+const tabsEl = document.getElementById('groupTabs');
+const tplMain = document.getElementById('tpl-main');
+const tplSub = document.getElementById('tpl-sub');
+const tplBlock = document.getElementById('tpl-block');
+function countBricks(g){ return g.subGroups.reduce((a,s)=>a + s.bricks.length, 0); }
+function doneBricks(g){ return g.subGroups.reduce((a,s)=>a + s.bricks.filter(b=>b.done).length, 0); }
+function renderTabs(){
+  tabsEl.innerHTML = '';
+  groups.forEach(g=>{
+    const btn = document.createElement('button');
+    btn.className = 'tab' + (g.id===activeGroupId ? ' active' : '');
+    if(g.id===activeGroupId) btn.style.background = g.color || '#6B8BB8';
+    btn.dataset.groupId = g.id;
+    btn.innerHTML = `<span class="dot" style="background:${g.color||'#6B8BB8'}"></span>${g.label || 'Untitled'} <span class="count">${doneBricks(g)}/${countBricks(g)}</span>`;
+    btn.onclick = ()=>{ activeGroupId = g.id; save(); render(); };
+    tabsEl.appendChild(btn);
+  });
+  setTimeout(()=>{ const a = tabsEl.querySelector('.active'); if(a) a.scrollIntoView({inline:'nearest', behavior:'smooth', block:'nearest'}); },50);
+}
+function makeBlockEl(b){
+  const clone = tplBlock.content.cloneNode(true);
+  const el = clone.querySelector('.block');
+  el.dataset.blockId = b.id;
+  el.dataset.type = b.type;
+  if(b.done) el.classList.add('done');
+  const content = el.querySelector('.content');
+  const controls = el.querySelector('.controls');
+  const doneBtn = el.querySelector('.doneBtn');
+  if(b.type==='todo'){ doneBtn.style.display='flex'; doneBtn.textContent = b.done ? '✓' : ''; }
+  if(b.type==='divider'){ content.textContent=''; content.contentEditable='false'; }
+  else { content.textContent = b.text || ''; }
+  const todoC = controls.querySelector('.todoControls');
+  const noteC = controls.querySelector('.noteControls');
+  const doneC = controls.querySelector('.doneControls');
+  if(b.type==='note'){ todoC.style.display='none'; noteC.style.display='contents'; doneC.style.display='none'; controls.querySelectorAll(':scope > .moveBtn').forEach(m=>m.style.display='none'); }
+  else if(b.done){ todoC.style.display='none'; noteC.style.display='none'; doneC.style.display='contents'; controls.querySelectorAll(':scope > .moveBtn').forEach(m=>m.style.display='none'); }
+  else { todoC.style.display='contents'; noteC.style.display='none'; doneC.style.display='none'; controls.querySelectorAll('[data-set-type]').forEach(btn=>{ if(btn.dataset.setType===b.type) btn.classList.add('on'); }); if(b.type!=='todo'){ const md = controls.querySelector('[data-mark-done]'); if(md) md.style.display='none'; } }
+  return el;
+}
+function render(){
+  renderTabs();
+  canvas.innerHTML = '';
+  if(groups.length===0){ canvas.innerHTML = `<div class="emptyWrap">Clean page.<br>You are the builder.<br><button onclick="addGroup()">+ Create your first group</button><br><span style="font-size:13px">e.g. Plans, Travel, Ideas, Daily</span></div>`; return; }
+  if(!activeGroupId || !groups.find(g=>g.id===activeGroupId)) activeGroupId = groups[0].id;
+  const g = groups.find(x=>x.id===activeGroupId);
+  const mClone = tplMain.content.cloneNode(true);
+  const mEl = mClone.querySelector('.mainGroup');
+  mEl.dataset.groupId = g.id;
+  const mainLabel = mEl.querySelector('.mainLabel');
+  mainLabel.textContent = g.label || '';
+  mEl.querySelector('.mainColorBtn').style.background = g.color || '#6B8BB8';
+  mEl.querySelector('.mainColorBtn').style.color = '#fff';
+  mEl.querySelectorAll('.colorRow button').forEach(b=>{ if(b.dataset.color===g.color) b.classList.add('on'); });
+  const wrap = mEl.querySelector('.subGroupsWrap');
+  if(!g.subGroups || g.subGroups.length===0){ wrap.innerHTML = `<div class="emptyWrap" style="padding:24px">No sub-groups yet.<br><button onclick="addSubGroupToActive()">+ Create sub-group</button><br><span style="font-size:13px">e.g. Travel to Malawi, Travel to Madagascar</span></div>`; }
+  (g.subGroups||[]).forEach(sub=>{
+    const sClone = tplSub.content.cloneNode(true);
+    const sEl = sClone.querySelector('.subGroup');
+    sEl.dataset.subId = sub.id;
+    sEl.style.borderLeftColor = g.color || '#6B8BB8';
+    const subLabel = sEl.querySelector('.subLabel');
+    subLabel.textContent = sub.label || '';
+    const done = sub.bricks.filter(b=>b.done).length;
+    sEl.querySelector('.subCount').textContent = `${done}/${sub.bricks.length} done`;
+    const bricksWrap = sEl.querySelector('.subBricks');
+    const doneSection = sEl.querySelector('.doneSection');
+    const doneList = sEl.querySelector('.doneList');
+    const doneToggle = sEl.querySelector('.doneToggle');
+    const activeBricks = sub.bricks.filter(b=>!b.done);
+    const doneBricksArr = sub.bricks.filter(b=>b.done);
+    if(activeBricks.length===0 && doneBricksArr.length===0){ bricksWrap.innerHTML = `<div class="subEmpty">No bricks yet. Tap + Todo or + Note below.</div>`; } else { activeBricks.forEach(b=> bricksWrap.appendChild(makeBlockEl(b))); }
+    if(doneBricksArr.length>0){ doneSection.style.display='flex'; const isOpen = !!openDone[sub.id]; doneToggle.innerHTML = `✓ <b>Done (${done})</b> — ${isOpen ? 'tap to hide ▲' : 'tap to show ▼'}`; if(isOpen) doneList.classList.remove('hidden'); else doneList.classList.add('hidden'); doneBricksArr.forEach(b=> doneList.appendChild(makeBlockEl(b))); } else { doneSection.style.display='none'; }
+    wrap.appendChild(sEl);
+  });
+  canvas.appendChild(mEl);
+}
+function addGroup(){
+  const colors = ['#6B8BB8','#8AB17D','#C98A7A','#C08AB5','#9B8AC4','#C9B67A','#7FB3C8','#8A9BA8'];
+  const g = {id: uid(), label:'', color: colors[groups.length % colors.length], subGroups: []};
+  groups.push(g); activeGroupId = g.id; save(); render();
+  setTimeout(()=>{ const el = canvas.querySelector(`[data-group-id="${g.id}"] .mainLabel`); if(el) el.focus(); },30);
+}
+function addSubGroupToActive(){
+  if(groups.length===0){ addGroup(); setTimeout(()=>addSubGroupToActive(),60); return; }
+  const g = groups.find(x=>x.id===activeGroupId); if(!g) return;
+  const sub = {id: uid(), label:'', bricks:[]};
+  g.subGroups.push(sub); save(); render();
+  setTimeout(()=>{ const el = canvas.querySelector(`[data-sub-id="${sub.id}"] .subLabel`); if(el) el.focus(); },30);
+}
+function addBrick(subId, type, atIndex=null){
+  for(const g of groups){
+    const sub = g.subGroups.find(s=>s.id===subId);
+    if(sub){
+      const nb = {id:uid(), type, text:'', done:false};
+      if(atIndex===null) sub.bricks.push(nb); else sub.bricks.splice(atIndex,0,nb);
+      save(); render();
+      setTimeout(()=>{ const el = canvas.querySelector(`[data-block-id="${nb.id}"] .content`); if(el) el.focus(); },30);
+      return;
+    }
+  }
+}
+function findBrick(id){
+  for(const g of groups){
+    for(const sub of g.subGroups){
+      const idx = sub.bricks.findIndex(b=>b.id===id);
+      if(idx!==-1) return {group:g, sub, idx, brick:sub.bricks[idx]};
+    }
+  }
+  return null;
+}
+function moveBrick(id, dir){
+  const f = findBrick(id); if(!f) return;
+  const list = f.sub.bricks.filter(b=>b.done === f.brick.done);
+  const posInList = list.findIndex(b=>b.id===id);
+  const newPos = posInList + dir;
+  if(newPos < 0 || newPos >= list.length) return;
+  const targetId = list[newPos].id;
+  const idxA = f.sub.bricks.findIndex(b=>b.id===id);
+  const idxB = f.sub.bricks.findIndex(b=>b.id===targetId);
+  const tmp = f.sub.bricks[idxA];
+  f.sub.bricks[idxA] = f.sub.bricks[idxB];
+  f.sub.bricks[idxB] = tmp;
+  save(); render();
+}
+function markDone(id, done){
+  const f = findBrick(id); if(!f) return;
+  f.brick.done = done;
+  save(); render();
+  if(done) { openDone[f.sub.id] = true; save(); render(); }
+}
+document.addEventListener('click', e=>{
+  if(!e.target.closest('.block') && !e.target.closest('.mainHead') && !e.target.closest('.subHead') && !e.target.closest('#addBar') && !e.target.closest('#sheetCard') && !e.target.closest('.tab') && !e.target.closest('.colorRow') && !e.target.closest('.doneToggle')){
+    document.querySelectorAll('.block').forEach(x=>x.classList.remove('active'));
+    document.querySelectorAll('.mainGroup').forEach(x=>x.classList.remove('showColors'));
+  }
+}, true);
+canvas.addEventListener('click', e=>{
+  const del = e.target.closest('.del');
+  const typeBtn = e.target.closest('[data-set-type]');
+  const moveBtn = e.target.closest('[data-move]');
+  const addInSub = e.target.closest('[data-add-in-sub]');
+  const groupDel = e.target.closest('[data-group-del]');
+  const subDel = e.target.closest('[data-sub-del]');
+  const colorToggle = e.target.closest('[data-color-toggle]');
+  const colorPick = e.target.closest('[data-color]');
+  const doneToggle = e.target.closest('[data-done-toggle]');
+  const doneBtn = e.target.closest('[data-done-btn]');
+  const markDoneBtn = e.target.closest('[data-mark-done]');
+  const undoBtn = e.target.closest('[data-undo-done]');
+  const blockEl = e.target.closest('.block');
+  if(doneToggle){ const sEl = e.target.closest('.subGroup'); if(!sEl) return; const subId = sEl.dataset.subId; openDone[subId] = !openDone[subId]; save(); render(); return; }
+  if(colorPick){ const gEl = e.target.closest('.mainGroup'); if(!gEl) return; const g = groups.find(x=>x.id===gEl.dataset.groupId); if(!g) return; g.color = colorPick.dataset.color; save(); render(); return; }
+  if(colorToggle){ const gEl = e.target.closest('.mainGroup'); if(!gEl) return; gEl.classList.toggle('showColors'); return; }
+  if(addInSub){ const sEl = e.target.closest('.subGroup'); if(!sEl) return; addBrick(sEl.dataset.subId, addInSub.dataset.addInSub); return; }
+  if(groupDel){ const gEl = e.target.closest('.mainGroup'); if(!gEl) return; if(!confirm('Delete this whole group and its sub-groups?')) return; groups = groups.filter(g=>g.id!==gEl.dataset.groupId); if(activeGroupId===gEl.dataset.groupId) activeGroupId = groups[0]?.id || null; save(); render(); return; }
+  if(subDel){ const sEl = e.target.closest('.subGroup'); if(!sEl) return; if(!confirm('Delete this sub-group?')) return; const g = groups.find(x=>x.id===activeGroupId); if(!g) return; g.subGroups = g.subGroups.filter(s=>s.id!==sEl.dataset.subId); save(); render(); return; }
+  if(doneBtn && blockEl){ e.stopPropagation(); markDone(blockEl.dataset.blockId, true); return; }
+  if(markDoneBtn && blockEl){ e.stopPropagation(); markDone(blockEl.dataset.blockId, true); return; }
+  if(undoBtn && blockEl){ e.stopPropagation(); markDone(blockEl.dataset.blockId, false); return; }
+  if(moveBtn && blockEl){ e.stopPropagation(); moveBrick(blockEl.dataset.blockId, parseInt(moveBtn.dataset.move,10)); return; }
+  if(del && blockEl){ const f = findBrick(blockEl.dataset.blockId); if(!f) return; f.sub.bricks.splice(f.idx,1); save(); render(); return; }
+  if(typeBtn && blockEl){ const f = findBrick(blockEl.dataset.blockId); if(!f) return; f.brick.type = typeBtn.dataset.setType; if(f.brick.type!=='todo') f.brick.done=false; save(); render(); return; }
+  if(blockEl){ e.stopPropagation(); document.querySelectorAll('.block').forEach(x=>x.classList.remove('active')); blockEl.classList.add('active'); }
+});
+canvas.addEventListener('input', e=>{
+  if(e.target.classList.contains('mainLabel')){ const g = groups.find(x=>x.id===e.target.closest('.mainGroup').dataset.groupId); if(g){ g.label = e.target.textContent; save(); renderTabs(); } return; }
+  if(e.target.classList.contains('subLabel')){ const f = groups.flatMap(g=>g.subGroups).find(s=>s.id===e.target.closest('.subGroup').dataset.subId); if(f){ f.label = e.target.textContent; save(); } return; }
+  const blockEl = e.target.closest('.block'); if(!blockEl) return;
+  const f = findBrick(blockEl.dataset.blockId); if(!f) return;
+  f.brick.text = getContentText(e.target);
+  save();
+});
+canvas.addEventListener('keydown', e=>{
+  if(e.key!=='Enter') return;
+  const blockEl = e.target.closest('.block'); if(!blockEl) return;
+  const f = findBrick(blockEl.dataset.blockId); if(!f) return;
+  if(f.brick.type==='note') return;
+  if(!e.shiftKey){ e.preventDefault(); const nb = {id:uid(), type:'todo', text:'', done:false}; f.sub.bricks.splice(f.idx+1,0,nb); save(); render(); setTimeout(()=>{ const el = canvas.querySelector(`[data-block-id="${nb.id}"] .content`); if(el) el.focus(); },30); }
+});
+let dragId=null;
+canvas.addEventListener('dragstart', e=>{ const b = e.target.closest('.block'); if(!b) return; dragId = b.dataset.blockId; b.classList.add('dragging'); });
+canvas.addEventListener('dragend', ()=>{ dragId=null; document.querySelectorAll('.block').forEach(x=>x.classList.remove('dragging')); });
+canvas.addEventListener('dragover', e=>{ e.preventDefault(); if(!dragId) return; const over = e.target.closest('.block'); if(!over || over.dataset.blockId===dragId) return; const rect = over.getBoundingClientRect(); const after = (e.clientY - rect.top) > rect.height/2; const draggingEl = canvas.querySelector(`[data-block-id="${dragId}"]`); if(after) over.after(draggingEl); else over.before(draggingEl); });
+canvas.addEventListener('drop', e=>{ e.preventDefault(); if(!dragId) return; document.querySelectorAll('.subGroup').forEach(sEl=>{ const sub = groups.flatMap(g=>g.subGroups).find(s=>s.id===sEl.dataset.subId); if(!sub) return; const order = [...sEl.querySelectorAll('.block')].map(el=>el.dataset.blockId); sub.bricks.sort((a,b)=> order.indexOf(a.id) - order.indexOf(b.id)); }); save(); render(); });
+let touchStartX = null, touchStartY = null;
+canvas.addEventListener('touchstart', e=>{ if(e.target.closest('.block') || e.target.closest('.mainHead') || e.target.closest('.subHead')) return; touchStartX = e.touches[0].clientX; touchStartY = e.touches[0].clientY; }, {passive:true});
+canvas.addEventListener('touchend', e=>{ if(touchStartX===null) return; const dx = e.changedTouches[0].clientX - touchStartX; const dy = e.changedTouches[0].clientY - touchStartY; touchStartX = null; touchStartY = null; if(Math.abs(dx) < 70 || Math.abs(dy) > 60) return; const idx = groups.findIndex(g=>g.id===activeGroupId); if(idx===-1) return; let next = idx; if(dx < 0) next = Math.min(groups.length-1, idx+1); else next = Math.max(0, idx-1); if(next!==idx){ activeGroupId = groups[next].id; save(); render(); } }, {passive:true});
+function pageText(){
+  return groups.map(g=>{
+    const head = g.label ? `\n## ${g.label}\n` : '';
+    const subs = g.subGroups.map(sub=>{
+      const sh = sub.label ? `\n### ${sub.label}\n` : '';
+      const body = sub.bricks.map(b=>{
+        if(b.type==='heading') return b.text;
+        if(b.type==='todo') return (b.done ? '✅ ' : '⬜ ') + b.text;
+        if(b.type==='divider') return '---';
+        return b.text;
+      }).join('\n');
+      return sh + body;
+    }).join('\n');
+    return head + subs;
+  }).join('\n');
+}
+async function shareOut(){
+  const text = pageText();
+  if(navigator.share){ try{ await navigator.share({title:'My Day — SYC Todo', text, url: location.href}); return; }catch(e){ return; } }
+  try{ await navigator.clipboard.writeText(text + '\n\n' + location.href); alert('Copied!'); }catch(e){ prompt('Copy:', text); }
+}
+function shareToSYC(app){
+  const base = { letter:'https://sycrar.github.io/letter-w-syc/' }[app];
+  window.open(base + '?text=' + encodeURIComponent(pageText()) + '&from=syc_todo','_blank');
+  closeSheet();
+}
+function openSheet(){ document.getElementById('sheet').classList.add('show'); }
+function closeSheet(){ document.getElementById('sheet').classList.remove('show'); }
+(function(){
+  const p = new URLSearchParams(location.search);
+  const t = p.get('text');
+  if(t && groups.length===0){
+    window.history.replaceState({},'',location.pathname);
+    groups = [{id:uid(), label:'Plans', color:'#6B8BB8', subGroups:[{id:uid(), label:'General', bricks: t.split('\n').filter(Boolean).map(line=>{
+      const clean = line.replace(/^  +/,'').trim();
+      if(clean.startsWith('✅')||clean.startsWith('⬜')) return {id:uid(), type:'todo', text: clean.replace(/^[✅⬜ ]+/,'').trim(), done: clean.startsWith('✅')};
+      return {id:uid(), type:'note', text: clean, done:false};
+    })}]}];
+    activeGroupId = groups[0].id;
+    save();
+  }
+})();
+render();
+</script>
+
+<script>
+// PWA Install logic
+let deferredPrompt = null;
+const installBtn = document.getElementById('installBtn');
+const iosHint = document.getElementById('iosHint');
+const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+
+if(isIOS && !isStandalone){
+  iosHint.style.display = 'block';
+}
+window.addEventListener('beforeinstallprompt', (e)=>{
+  e.preventDefault();
+  deferredPrompt = e;
+  installBtn.style.display = 'block';
+});
+async function installApp(){
+  if(!deferredPrompt) return;
+  deferredPrompt.prompt();
+  const { outcome } = await deferredPrompt.userChoice;
+  deferredPrompt = null;
+  installBtn.style.display = 'none';
+}
+window.addEventListener('appinstalled', ()=>{
+  installBtn.style.display = 'none';
+  deferredPrompt = null;
+});
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').then(()=>console.log('SYC Todo PWA ready')).catch(()=>{});
+  });
+}
+</script>
+</body>
+</html>
