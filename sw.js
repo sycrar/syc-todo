@@ -1,4 +1,4 @@
-const CACHE = 'syc-todo-v1';
+const CACHE = 'syc-todo-v1.2';
 const FILES = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', (e) => {

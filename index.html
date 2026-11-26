@@ -12,502 +12,284 @@
 <link rel="apple-touch-icon" href="icon-192.png">
 <link rel="icon" type="image/png" href="icon-192.png">
 <style>
-  *{box-sizing:border-box}
-  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:#FDFCFE;color:#0F172A;overflow-x:hidden}
-  header{position:sticky;top:0;background:rgba(253,252,254,.92);backdrop-filter:blur(12px);border-bottom:1px solid #EDE9FE;padding:12px 16px 0;display:flex;flex-direction:column;gap:8px;z-index:10}
-  .headRow{display:flex;justify-content:space-between;align-items:flex-start}
-  .left{line-height:1.2}
-  #clock{font-size:12px;color:#64748B;font-weight:500}
-  #dateLine{font-size:16px;font-weight:700;letter-spacing:-.3px}
-  .top-btns{display:flex;gap:6px}
-  .top-btns button{border:1px solid #EDE9FE;background:#fff;padding:7px 11px;border-radius:99px;font-size:13px;cursor:pointer}
-  .top-btns button.primary{background:#6B8BB8;color:#fff;border-color:#6B8BB8}
-  #installBtn{display:none;background:#0F172A !important;color:#fff !important;border-color:#0F172A !important}
-  #groupTabs{display:flex;gap:8px;overflow-x:auto;padding:4px 0 12px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
-  #groupTabs::-webkit-scrollbar{display:none}
-  .tab{flex-shrink:0;border:1px solid #EDE9FE;background:#fff;padding:8px 14px;border-radius:99px;font-size:14px;cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:6px}
-  .tab.active{background:#6B8BB8;color:#fff;border:none;box-shadow:2px 2px 4px rgba(107,139,184,0.25);font-weight:600}
-  .tab .dot{width:9px;height:9px;border-radius:99px;flex-shrink:0}
-  .tab .count{opacity:.7;font-size:12px;margin-left:2px}
-  #canvas{max-width:680px;margin:0 auto;padding:20px 16px 180px;display:flex;flex-direction:column;gap:16px;touch-action:pan-y}
-  .emptyWrap{background:#fff;border:1px dashed #DDD6FE;border-radius:16px;padding:40px 20px;text-align:center;color:#64748B;line-height:1.6}
-  .emptyWrap button{border:none;outline:none;background:#fff;color:#0F172A;padding:12px 18px;border-radius:99px;font-size:15px;cursor:pointer;margin-top:12px;box-shadow:2px 2px 4px rgba(107,139,184,0.25);font-weight:700}
-  .mainGroup{display:flex;flex-direction:column;gap:14px}
-  .mainHead{display:flex;align-items:center;gap:8px;padding:2px 4px}
-  .mainLabel{flex:1;outline:none;font-size:19px;font-weight:800;letter-spacing:-.3px;min-height:24px}
-  .mainLabel:empty:before{content:"Untitled group";color:#94A3B8}
-  .mainColorBtn{border:1px solid #EDE9FE;background:#fff;width:28px;height:28px;border-radius:99px;cursor:pointer}
-  .mainMenu{border:0;background:none;font-size:18px;color:#94A3B8;cursor:pointer}
-  .colorRow{display:none;gap:6px;padding:0 4px 4px;flex-wrap:wrap}
-  .mainGroup.showColors .colorRow{display:flex}
-  .colorRow button{width:26px;height:26px;border-radius:99px;border:2px solid #fff;box-shadow:0 0 0 1px #EDE9FE;cursor:pointer}
-  .colorRow button.on{box-shadow:0 0 0 2px #6B8BB8}
-  .subGroup{background:#fff;border:1px solid #EDE9FE;border-left:4px solid #6B8BB8;border-radius:16px;overflow:hidden}
-  .subHead{display:flex;gap:8px;align-items:center;padding:13px 14px 8px}
-  .subLabel{flex:1;outline:none;font-size:16px;font-weight:700;letter-spacing:-.2px;min-height:22px}
-  .subLabel:empty:before{content:"Untitled sub-group";color:#94A3B8}
-  .subCount{font-size:12px;color:#64748B;background:#FDFCFE;padding:4px 8px;border-radius:99px;border:1px solid #EDE9FE;cursor:pointer}
-  .subCount:active{background:#EDE9FE}
-  .subMenu{border:0;background:none;font-size:16px;color:#94A3B8;cursor:pointer}
-  .subBricks{display:flex;flex-direction:column;gap:6px;padding:0 10px 10px}
-  .subEmpty{color:#94A3B8;font-size:14px;padding:8px 6px}
-  .subAdd{display:flex;gap:6px;padding:0 10px 12px;flex-wrap:wrap}
-  .subAdd button{border:1px dashed #DDD6FE;background:#FDFCFE;padding:7px 11px;border-radius:99px;font-size:13px;cursor:pointer;color:#475569}
-  .doneSection{border-top:1px dashed #DDD6FE;margin:4px 10px 10px;padding-top:8px;display:flex;flex-direction:column;gap:6px}
-  .doneToggle{border:0;background:#FDFCFE;padding:8px 10px;border-radius:10px;font-size:13px;cursor:pointer;color:#64748B;text-align:left;width:100%}
-  .doneToggle b{color:#0F172A}
-  .doneList{display:flex;flex-direction:column;gap:6px}
-  .doneList.hidden{display:none}
-  .block{position:relative;display:flex;gap:8px;align-items:flex-start;padding:8px 10px;border-radius:12px;background:#FDFCFE;border:1px solid #EDE9FE;transition:.15s}
-  .block:hover{border-color:#DDD6FE;background:#fff}
-  .block.active{border-color:#6B8BB8;background:#fff;box-shadow:0 4px 16px rgba(107,139,184,.12)}
-  .block.dragging{opacity:.4;outline:2px dashed #6B8BB8}
-  .block .handle{cursor:grab;color:#C4B5FD;font-size:16px;padding-top:3px;user-select:none}
-  .block .content{flex:1;outline:none;min-height:22px;line-height:1.5;font-size:16px;white-space:pre-wrap;word-break:break-word}
-  .block[data-type="heading"]{background:transparent;border-color:transparent;padding:14px 10px 6px;box-shadow:none}
-  .block[data-type="heading"] .content{font-size:24px;font-weight:900;letter-spacing:-.6px;line-height:1.15;color:#0F172A}
-  .block[data-type="todo"] .content{font-size:16px;font-weight:400}
-  .block[data-type="note"]{background:#fff;border-color:#DDD6FE}
-  .block[data-type="note"] .content{font-size:15px;color:#334155;line-height:1.6;min-height:44px;font-weight:400}
-  .block[data-type="divider"]{background:transparent;border-color:transparent;padding:2px 10px}
-  .block[data-type="divider"] .content{border-top:1px solid #DDD6FE;height:1px;min-height:1px}
-  .block.done{opacity:1;background:#FDFCFE}
-  .block.done .content{color:#64748B;opacity:1;text-decoration:line-through;text-decoration-color:#64748B;text-decoration-thickness:1.5px}
-  .doneBtn{width:24px;height:24px;min-width:24px;margin-top:1px;border:1.5px solid #CBD5E1;background:#fff;border-radius:99px;cursor:pointer;font-size:13px;line-height:1;display:flex;align-items:center;justify-content:center;color:#fff;padding:0}
-  .doneBtn:active{background:#EDE9FE}
-  .block.done .doneBtn{background:#6B8BB8;border-color:#6B8BB8}
-  .undoBtn{border:1px solid #EDE9FE;background:#fff;font-size:12px;padding:6px 10px;border-radius:99px;cursor:pointer;color:#475569}
-  .block .del{opacity:0;border:0;background:none;color:#94A3B8;cursor:pointer;font-size:18px;padding:2px 4px}
-  .block:hover .del,.block.active .del{opacity:1}
-  .controls{display:none;flex-wrap:wrap;gap:4px;margin:6px 0 0 0}
-  .block.active .controls{display:flex}
-  .controls button{border:1px solid #EDE9FE;background:#fff;font-size:12px;padding:6px 10px;border-radius:99px;cursor:pointer}
-  .controls button.on{background:#6B8BB8;color:#fff;border-color:#6B8BB8}
-  .controls button.moveBtn{font-weight:700}
-  #addBar{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:transparent;border:none;padding:0;display:flex;flex-direction:column;gap:8px;align-items:center;z-index:20;box-shadow:none}
-  #addBar button{border:none;outline:none;padding:12px 22px;border-radius:99px;font-size:15px;cursor:pointer;background:#fff;color:#0F172A;font-weight:700;white-space:nowrap;box-shadow:2px 2px 4px rgba(107,139,184,0.25);width:100%;text-align:center}
-  #addBar button.primary{background:#6B8BB8;color:#fff}
-  #addBar button:active{box-shadow:1px 1px 2px rgba(107,139,184,0.25);transform:translateY(1px)}
-  #sheet{position:fixed;inset:0;background:rgba(15,35,90,.35);display:none;align-items:flex-end;justify-content:center;z-index:30}
-  #sheet.show{display:flex}
-  #sheetCard{background:#fff;width:100%;max-width:520px;border-radius:20px 20px 0 0;padding:18px}
-  #sheetCard button{width:100%;text-align:left;border:0;background:#FDFCFE;padding:13px;border-radius:12px;margin-top:8px;font-size:15px;cursor:pointer}
-  #iosHint{display:none;background:#0F172A;color:#fff;padding:10px 14px;border-radius:12px;font-size:13px;line-height:1.5;margin:0 16px 10px}
-  #iosHint b{color:#fff}
+*{box-sizing:border-box}
+:root{--bg:#FDFCFE;--card:#fff;--text:#0F172A;--muted:#64748B;--line:#EDE9FE;--line2:#DDD6FE;--accent:#6B8BB8;--soft:#FDFCFE}
+body.dark{--bg:#12121A;--card:#1E1E2A;--text:#F1F5F9;--muted:#94A3B8;--line:#2E2E3E;--line2:#3E3E52;--accent:#8EA6C8;--soft:#232329}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden}
+header{position:sticky;top:0;background:color-mix(in srgb,var(--bg) 94%,transparent);backdrop-filter:blur(12px);border-bottom:1px solid var(--line);padding:8px 12px 0;z-index:10}
+.headRow{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.left{line-height:1.2;flex:1;min-width:0}
+#greeting{font-size:16px;font-weight:800;letter-spacing:-.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#subLine{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
+#aiLine{font-size:11px;color:var(--muted);margin-top:2px;display:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#aiLine.show{display:block}#aiLine b{color:var(--text)}
+.top-btns{display:flex;gap:6px;flex-shrink:0}
+.top-btns button{border:1px solid var(--line);background:var(--card);color:var(--text);padding:6px 10px;border-radius:99px;font-size:12px;cursor:pointer}
+.top-btns button.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+#installBtn{display:none;background:#0F172A!important;color:#fff!important}
+#widget{display:flex;gap:6px;padding:6px 0 2px;flex-wrap:wrap}
+.wPill{font-size:11px;padding:4px 8px;border-radius:99px;border:1px solid var(--line);background:var(--card);color:var(--muted)}
+.wPill b{color:var(--text);font-size:12px}
+#groupTabs{display:flex;gap:6px;overflow-x:auto;padding:6px 0 10px;scrollbar-width:none}
+#groupTabs::-webkit-scrollbar{display:none}
+.tab{flex-shrink:0;border:1px solid var(--line);background:var(--card);color:var(--text);padding:6px 12px;border-radius:99px;font-size:13px;cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:6px}
+.tab.active{background:var(--accent);color:#fff;border:none;font-weight:600}
+.tab .dot{width:8px;height:8px;border-radius:99px}.tab .count{opacity:.8;font-size:11px}
+#canvas{max-width:680px;margin:0 auto;padding:14px 14px 180px;display:flex;flex-direction:column;gap:14px}
+.emptyWrap{background:var(--card);border:1px dashed var(--line2);border-radius:16px;padding:32px 18px;text-align:center;color:var(--muted);line-height:1.6}
+.emptyWrap button{border:none;background:var(--card);color:var(--text);padding:10px 16px;border-radius:99px;cursor:pointer;margin-top:10px;box-shadow:2px 2px 4px rgba(107,139,184,.25);font-weight:700}
+.mainGroup{display:flex;flex-direction:column;gap:12px}
+.mainHead{display:flex;align-items:center;gap:6px;padding:2px 2px}
+.mainLabel{flex:1;outline:none;font-size:18px;font-weight:800;min-height:24px;color:var(--text)}
+.mainLabel:empty:before{content:"Untitled group";color:#94A3B8}
+.mainColorBtn{border:1px solid var(--line);background:var(--card);width:26px;height:26px;border-radius:99px;cursor:pointer;font-size:12px}
+.iconBtn{border:0;background:none;font-size:16px;color:#94A3B8;cursor:pointer;line-height:1;padding:4px}
+.colorRow{display:none;gap:6px;padding:0 2px 2px;flex-wrap:wrap}.mainGroup.showColors .colorRow{display:flex}
+.colorRow button{width:24px;height:24px;border-radius:99px;border:2px solid #fff;box-shadow:0 0 0 1px var(--line);cursor:pointer}
+.prioBadge{font-size:11px;font-weight:800;padding:4px 8px;border-radius:99px;cursor:pointer;border:1px solid var(--line);background:var(--soft);color:var(--muted);white-space:nowrap}
+.prioBadge.high{background:#FEE2E2;color:#991B1B;border-color:#FCA5A5}.prioBadge.medium{background:#FEF3C7;color:#92400E;border-color:#FDE68A}.prioBadge.low{background:#DBEAFE;color:#1E40AF;border-color:#93C5FD}.prioBadge.important{background:#111;color:#fff;border-color:#111}
+body.dark .prioBadge.important{background:#fff;color:#111}
+.subGroup{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:16px;overflow:hidden}
+.subHead{display:flex;gap:6px;align-items:center;padding:11px 12px 6px}
+.subLabel{flex:1;outline:none;font-size:15px;font-weight:700;min-height:20px;color:var(--text)}
+.subLabel:empty:before{content:"Untitled sub-group";color:#94A3B8}
+.subCount{font-size:11px;color:var(--muted);background:var(--soft);padding:3px 7px;border-radius:99px;border:1px solid var(--line);cursor:pointer;white-space:nowrap}
+.subBricks{display:flex;flex-direction:column;gap:6px;padding:0 8px 8px}
+.subEmpty{color:#94A3B8;font-size:13px;padding:6px}
+.subAdd{display:flex;gap:6px;padding:0 8px 10px;flex-wrap:wrap}
+.subAdd button{border:1px dashed var(--line2);background:var(--soft);padding:6px 10px;border-radius:99px;font-size:12px;cursor:pointer;color:var(--muted)}
+.doneSection{border-top:1px dashed var(--line2);margin:2px 8px 8px;padding-top:6px;display:flex;flex-direction:column;gap:6px}
+.doneToggle{border:0;background:var(--soft);padding:7px 9px;border-radius:10px;font-size:12px;cursor:pointer;color:var(--muted);text-align:left;width:100%}
+.doneToggle b{color:var(--text)}.doneList{display:flex;flex-direction:column;gap:6px}.doneList.hidden{display:none}
+.block{position:relative;display:flex;gap:8px;align-items:flex-start;padding:8px 10px;border-radius:12px;background:var(--soft);border:1px solid var(--line)}
+.block.active{border-color:var(--accent);background:var(--card)}
+.block .content{flex:1;outline:none;min-height:22px;line-height:1.5;font-size:16px;white-space:pre-wrap;word-break:break-word;color:var(--text)}
+.block[data-type="heading"]{background:transparent;border-color:transparent;padding:12px 10px 4px}
+.block[data-type="heading"] .content{font-size:23px;font-weight:900;line-height:1.15}
+.block[data-type="note"]{background:var(--card);border-color:var(--line2)}
+.block[data-type="note"] .content{font-size:15px;line-height:1.65;min-height:40px;color:var(--muted);white-space:pre-wrap}
+.block[data-type="note"] .content div,.block[data-type="note"] .content p{margin:0 0 10px 0}
+.block.done .content{color:var(--muted);text-decoration:line-through}
+.doneBtn{width:24px;height:24px;min-width:24px;margin-top:1px;border:1.5px solid #CBD5E1;background:var(--card);border-radius:8px;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;color:#fff;padding:0}
+.block.done .doneBtn{background:var(--accent);border-color:var(--accent)}
+.metaLine{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}
+.metaPill{font-size:11px;padding:3px 8px;border-radius:99px;border:1px solid var(--line);background:var(--card);color:var(--muted)}
+.metaPill.overdue{background:#FEE2E2;color:#991B1B;border-color:#FCA5A5;font-weight:700}
+.rightCol{display:none;flex-direction:column;align-items:center;gap:2px;flex-shrink:0}
+.block.active .rightCol{display:flex}
+.rightCol button{border:0;background:none;color:#94A3B8;cursor:pointer;font-size:14px;line-height:1;padding:3px 4px}
+.block .del{font-size:16px}
+.controls{display:none;flex-wrap:wrap;gap:4px;margin:8px 0 0 0}
+.block.active .controls{display:flex}
+.controls button{border:1px solid var(--line);background:var(--card);color:var(--text);font-size:12px;padding:6px 10px;border-radius:99px;cursor:pointer}
+.controls button.on{background:var(--accent);color:#fff}
+.controls select,.controls input[type="datetime-local"]{border:1px solid var(--line);background:var(--card);color:var(--text);border-radius:99px;padding:6px 8px;font-size:12px}
+#addBar{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);display:flex;flex-direction:row;gap:8px;z-index:20;width:min(680px,92vw)}
+#addBar button{flex:1;border:none;padding:12px 14px;border-radius:99px;font-size:14px;cursor:pointer;background:var(--card);color:var(--text);font-weight:700;box-shadow:2px 2px 4px rgba(107,139,184,.25)}
+#addBar button.primary{background:var(--accent);color:#fff}
+#sheet{position:fixed;inset:0;background:rgba(15,35,90,.35);display:none;align-items:flex-end;justify-content:center;z-index:30}
+#sheet.show{display:flex}#sheetCard{background:var(--card);color:var(--text);width:100%;max-width:520px;border-radius:20px 20px 0 0;padding:18px;max-height:88dvh;overflow-y:auto}
+#sheetCard button{width:100%;text-align:left;border:0;background:var(--soft);color:var(--text);padding:13px;border-radius:12px;margin-top:8px;font-size:15px;cursor:pointer}
+#sheetCard input{width:100%;padding:12px;border:1px solid var(--line);border-radius:12px;background:var(--soft);color:var(--text);font-size:15px;margin-top:8px;outline:none}
+.versionLine{text-align:center;font-size:12px;color:var(--muted);margin-top:10px}
+#iosHint{display:none;background:#0F172A;color:#fff;padding:10px 14px;border-radius:12px;font-size:13px;margin:8px 12px 0}
+#toast{position:fixed;left:50%;bottom:80px;transform:translateX(-50%);background:#111;color:#fff;padding:10px 14px;border-radius:99px;font-size:13px;font-weight:700;display:none;z-index:50;max-width:92vw;text-align:center}
+body.dark #toast{background:#fff;color:#111}
 </style>
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXX"></script>
-<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());gtag('config','G-XXXX');</script>
 </head>
 <body>
-
 <header>
   <div class="headRow">
     <div class="left">
-      <div id="clock">--:--</div>
-      <div id="dateLine">Today</div>
+      <div id="greeting">Hello</div>
+      <div id="subLine"><span id="clock">--:--</span> • <span id="dateLine">Today</span></div>
+      <div id="aiLine"></div>
     </div>
     <div class="top-btns">
       <button id="installBtn" onclick="installApp()">↓ Install</button>
-      <button onclick="shareOut()">↗ Share</button>
+      <button onclick="toggleTheme()" id="themeBtn">🌗</button>
       <button class="primary" onclick="openSheet()">⋯ Ecosystem</button>
     </div>
+  </div>
+  <div id="widget">
+    <span class="wPill">Today <b id="wToday">0</b></span>
+    <span class="wPill">Priorities <b id="wPrio">0</b></span>
+    <span class="wPill">Done <b id="wDone">0</b></span>
+    <span class="wPill">Next <b id="wNext">—</b></span>
   </div>
   <div id="groupTabs"></div>
 </header>
 <div id="iosHint">On iPhone: tap <b>Share ↗</b> → <b>Add to Home Screen</b> to install SYC Todo.</div>
-
 <div id="canvas"></div>
+<div id="addBar"><button class="primary" onclick="addGroup()">+ New Group</button><button onclick="addSubGroupToActive()">+ Sub-group</button></div>
+<div id="toast"></div>
 
-<div id="addBar">
-  <button class="primary" onclick="addGroup()">+ New Group</button>
-  <button onclick="addSubGroupToActive()">+ Sub-group</button>
-</div>
+<template id="tpl-main"><div class="mainGroup" data-group-id=""><div class="mainHead"><div class="mainLabel" contenteditable="true"></div><span class="prioBadge" data-prio-group="1">Priority</span><button class="mainColorBtn" data-color-toggle="1">🎨</button><button class="iconBtn" data-group-del="1" title="Delete group">✕</button></div><div class="colorRow"><button data-color="#6B8BB8" style="background:#6B8BB8"></button><button data-color="#8AB17D" style="background:#8AB17D"></button><button data-color="#C98A7A" style="background:#C98A7A"></button><button data-color="#C08AB5" style="background:#C08AB5"></button><button data-color="#9B8AC4" style="background:#9B8AC4"></button><button data-color="#C9B67A" style="background:#C9B67A"></button><button data-color="#7FB3C8" style="background:#7FB3C8"></button><button data-color="#8A9BA8" style="background:#8A9BA8"></button></div><div class="subGroupsWrap" style="display:flex;flex-direction:column;gap:12px"></div></div></template>
 
-<template id="tpl-main">
-  <div class="mainGroup" data-group-id="">
-    <div class="mainHead">
-      <div class="mainLabel" contenteditable="true"></div>
-      <button class="mainColorBtn" data-color-toggle="1">🎨</button>
-      <button class="mainMenu" data-group-del="1">⋯</button>
-    </div>
-    <div class="colorRow">
-      <button data-color="#6B8BB8" style="background:#6B8BB8"></button>
-      <button data-color="#8AB17D" style="background:#8AB17D"></button>
-      <button data-color="#C98A7A" style="background:#C98A7A"></button>
-      <button data-color="#C08AB5" style="background:#C08AB5"></button>
-      <button data-color="#9B8AC4" style="background:#9B8AC4"></button>
-      <button data-color="#C9B67A" style="background:#C9B67A"></button>
-      <button data-color="#7FB3C8" style="background:#7FB3C8"></button>
-      <button data-color="#8A9BA8" style="background:#8A9BA8"></button>
-    </div>
-    <div class="subGroupsWrap" style="display:flex;flex-direction:column;gap:14px"></div>
-  </div>
-</template>
+<template id="tpl-sub"><section class="subGroup" data-sub-id=""><div class="subHead"><span class="prioBadge" data-prio-sub="1">Priority</span><div class="subLabel" contenteditable="true"></div><span class="subCount" data-done-toggle="1"></span><button class="iconBtn" data-sub-move="-1">↑</button><button class="iconBtn" data-sub-move="1">↓</button><button class="iconBtn" data-sub-del="1">✕</button></div><div class="subBricks"></div><div class="doneSection" style="display:none"><button class="doneToggle" data-done-toggle="1"></button><div class="doneList hidden"></div></div><div class="subAdd"><button data-add-in-sub="todo">+ Todo</button><button data-add-in-sub="note">+ Note</button><button data-add-in-sub="heading">+ Heading</button></div></section></template>
 
-<template id="tpl-sub">
-  <section class="subGroup" data-sub-id="">
-    <div class="subHead">
-      <div class="subLabel" contenteditable="true"></div>
-      <span class="subCount" data-done-toggle="1"></span>
-      <button class="subMenu" data-sub-del="1">⋯</button>
-    </div>
-    <div class="subBricks"></div>
-    <div class="doneSection" style="display:none">
-      <button class="doneToggle" data-done-toggle="1"></button>
-      <div class="doneList hidden"></div>
-    </div>
-    <div class="subAdd">
-      <button data-add-in-sub="todo">+ Todo</button>
-      <button data-add-in-sub="note">+ Note</button>
-      <button data-add-in-sub="heading">+ Heading</button>
-      <button data-add-in-sub="divider">+ Divider</button>
-    </div>
-  </section>
-</template>
+<template id="tpl-block"><div class="block" data-block-id="" data-type="todo"><button class="doneBtn" data-done-btn="1" style="display:none">✓</button><div style="flex:1;min-width:0"><div class="content" contenteditable="true"></div><div class="metaLine"></div><div class="controls"><span class="todoControls" style="display:contents"><button data-set-type="heading">Heading</button><button data-set-type="todo">Todo</button><button data-set-type="note">Note</button><button data-mark-done="1">✓ Done</button></span><span class="doneControls" style="display:none"><button data-undo-done="1">↩ Undo</button></span><select data-prio-select="1"><option value="">No priority</option><option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option><option value="important">★ Important</option></select><input type="datetime-local" data-deadline="1"><select data-link-note="1" style="display:none"><option value="">Link to Todo…</option></select></div></div><div class="rightCol"><button data-move="-1" title="Move up">↑</button><button data-move="1" title="Move down">↓</button><button class="del" title="Delete">✕</button></div></div></template>
 
-<template id="tpl-block">
-  <div class="block" data-block-id="" data-type="todo" draggable="true">
-    <span class="handle">⠿</span>
-    <button class="doneBtn" data-done-btn="1" style="display:none">✓</button>
-    <div style="flex:1;min-width:0">
-      <div class="content" contenteditable="true"></div>
-      <div class="controls">
-        <button class="moveBtn" data-move="-1">↑</button>
-        <button class="moveBtn" data-move="1">↓</button>
-        <span class="todoControls" style="display:contents">
-          <button data-set-type="heading">Heading</button>
-          <button data-set-type="todo">Todo</button>
-          <button data-set-type="note">Note</button>
-          <button data-set-type="divider">Divider</button>
-          <button data-mark-done="1">✓ Done</button>
-        </span>
-        <span class="noteControls" style="display:none">
-          <button class="moveBtn" data-move="-1">↑</button>
-          <button class="moveBtn" data-move="1">↓</button>
-        </span>
-        <span class="doneControls" style="display:none">
-          <button class="undoBtn" data-undo-done="1">↩ Undo</button>
-          <button class="moveBtn" data-move="-1">↑</button>
-          <button class="moveBtn" data-move="1">↓</button>
-        </span>
-      </div>
-    </div>
-    <button class="del">×</button>
-  </div>
-</template>
-
-<div id="sheet" onclick="if(event.target===this) closeSheet()">
-  <div id="sheetCard">
-    <b style="font-size:18px">Send this page to...</b>
-    <button onclick="shareToSYC('letter')"><b>💌 Letter w Syc</b><br><span style="color:#64748B;font-size:13px">Turn your todos into a letter</span></button>
-    <button onclick="shareOut()"><b>↗ Share anywhere</b><br><span style="color:#64748B;font-size:13px">WhatsApp, Instagram, SMS</span></button>
-    <button onclick="closeSheet()" style="background:#fff;text-align:center;color:#64748B">Close</button>
-  </div>
-</div>
+<div id="sheet" onclick="if(event.target===this) closeSheet()"><div id="sheetCard"><b style="font-size:18px">SYC Ecosystem</b><button onclick="shareOut()"><b>↗ Share SYC Todo</b><br><span style="color:var(--muted);font-size:13px">Share the app link</span></button><label style="font-size:12px;color:var(--muted);display:block;margin-top:14px">YOUR NAME / NICKNAME</label><input id="nameInput" placeholder="e.g. Kyle"><button onclick="saveName()" style="text-align:center;font-weight:800">Save name</button><button id="alertsBtn" onclick="toggleAlerts()" style="text-align:center">🔔 Deadline alerts: Off - tap to enable</button><a href="https://ko-fi.com/itsbykit" target="_blank" rel="noopener" style="display:block;text-align:center;background:#FF5E5B;color:#fff;padding:13px;border-radius:12px;font-size:15px;font-weight:800;text-decoration:none;margin-top:8px">☕ Buy us a Ko-fi</a><a href="mailto:sycrar@gmail.com" style="display:block;text-align:center;background:var(--soft);color:var(--text);padding:13px;border-radius:12px;font-size:15px;font-weight:700;text-decoration:none;margin-top:8px">✉️ Contact & Support — sycrar@gmail.com</a><div class="versionLine">SYC Todo • Version 1.2</div><button onclick="closeSheet()" style="background:var(--card);text-align:center;color:var(--muted)">Close</button></div></div>
 
 <script>
+function uid(){return Math.random().toString(36).slice(2,9)}
+let userName=localStorage.getItem('syc_name')||'';
+let theme=localStorage.getItem('syc_todo_theme')||'light';
+if(theme==='dark')document.body.classList.add('dark');
+let alertsEnabled=localStorage.getItem('syc_alerts')==='1';
+function toggleTheme(){theme=document.body.classList.toggle('dark')?'dark':'light';localStorage.setItem('syc_todo_theme',theme);document.getElementById('themeBtn').textContent=theme==='dark'?'🌓':'🌗'}
+document.getElementById('themeBtn').textContent=theme==='dark'?'🌓':'🌗';
+function saveName(){let v=document.getElementById('nameInput').value.trim();if(v){userName=v;localStorage.setItem('syc_name',v);toast('Saved, '+v);tick()}closeSheet()}
+function toggleAlerts(){alertsEnabled=!alertsEnabled;localStorage.setItem('syc_alerts',alertsEnabled?'1':'0');if(alertsEnabled&&'Notification' in window)Notification.requestPermission();updateAlertsBtn();toast(alertsEnabled?'Deadline alerts on — all deadlines will alert automatically':'Deadline alerts off');if(alertsEnabled)checkAlerts()}
+function updateAlertsBtn(){let b=document.getElementById('alertsBtn');if(b)b.textContent=alertsEnabled?'🔔 Deadline alerts: On — tap to turn off':'🔔 Deadline alerts: Off — tap to enable'}
+let audioCtx=null;
+function playDoneSound(){try{if(!audioCtx)audioCtx=new (window.AudioContext||window.webkitAudioContext)();if(audioCtx.state==='suspended')audioCtx.resume();let t=audioCtx.currentTime;[[880,0],[1174.66,0.09]].forEach(([f,off])=>{let o=audioCtx.createOscillator(),g=audioCtx.createGain();o.type='sine';o.frequency.value=f;g.gain.setValueAtTime(0.0001,t+off);g.gain.exponentialRampToValueAtTime(0.18,t+off+0.02);g.gain.exponentialRampToValueAtTime(0.0001,t+off+0.22);o.connect(g);g.connect(audioCtx.destination);o.start(t+off);o.stop(t+off+0.25)})}catch(e){}}
+function getContentText(el){if(!el)return'';let out='';el.childNodes.forEach(n=>{if(n.nodeType===3)out+=n.textContent;else if(n.nodeName==='BR')out+='\n';else if(n.nodeName==='DIV'||n.nodeName==='P'){let inner=getContentText(n);if(out&&!out.endsWith('\n'))out+='\n';out+=inner;if(!out.endsWith('\n'))out+='\n'}else out+=n.textContent||''});return out.replace(/\n+$/,'')}
+function setContentText(el,text){el.textContent='';let paras=(text||'').split('\n');paras.forEach((line,i)=>{el.appendChild(document.createTextNode(line));if(i<paras.length-1)el.appendChild(document.createElement('br'))})}
+let groups=JSON.parse(localStorage.getItem('syc_todo_groups_v5')||'null');
+if(!groups){let old=JSON.parse(localStorage.getItem('syc_todo_groups_v4')||'[]');groups=old.map(g=>({...g,priority:g.priority||'',subGroups:(g.subGroups||[]).map(s=>({...s,priority:s.priority||'',bricks:(s.bricks||[]).filter(b=>b.type!=='divider').map(b=>({...b,priority:b.priority||'',deadline:b.deadline||'',alerted:!!b.alerted,linkedTodoId:b.linkedTodoId||''}))}))}))}
+let activeGroupId=localStorage.getItem('syc_active_group')||(groups[0]?.id||null);
+let openDone=JSON.parse(localStorage.getItem('syc_open_done')||'{}');
+function save(){localStorage.setItem('syc_todo_groups_v5',JSON.stringify(groups));localStorage.setItem('syc_open_done',JSON.stringify(openDone));if(activeGroupId)localStorage.setItem('syc_active_group',activeGroupId)}
+function syncAllTexts(){document.querySelectorAll('.mainLabel').forEach(el=>{let g=groups.find(x=>x.id===el.closest('.mainGroup').dataset.groupId);if(g)g.label=el.textContent});document.querySelectorAll('.subLabel').forEach(el=>{let s=groups.flatMap(g=>g.subGroups).find(s=>s.id===el.closest('.subGroup').dataset.subId);if(s)s.label=el.textContent});document.querySelectorAll('.block .content').forEach(el=>{let f=findBrick(el.closest('.block').dataset.blockId);if(f)f.brick.text=getContentText(el)})}
+const canvas=document.getElementById('canvas'),tabsEl=document.getElementById('groupTabs'),tplMain=document.getElementById('tpl-main'),tplSub=document.getElementById('tpl-sub'),tplBlock=document.getElementById('tpl-block');
+function prioRank(p){return p==='important'?4:p==='high'?3:p==='medium'?2:p==='low'?1:0}
+function prioLabel(p){return p==='important'?'★ Important':p==='high'?'High':p==='medium'?'Medium':p==='low'?'Low':'Priority'}
+function countBricks(g){return g.subGroups.reduce((a,s)=>a+s.bricks.length,0)}
+function doneBricks(g){return g.subGroups.reduce((a,s)=>a+s.bricks.filter(b=>b.done).length,0)}
+function allBricks(){let out=[];groups.forEach(g=>g.subGroups.forEach(s=>s.bricks.forEach(b=>out.push({g,s,b}))));return out}
+function isToday(d){let n=new Date();return d.getFullYear()===n.getFullYear()&&d.getMonth()===n.getMonth()&&d.getDate()===n.getDate()}
+function isTomorrow(d){let n=new Date();n.setDate(n.getDate()+1);return d.getFullYear()===n.getFullYear()&&d.getMonth()===n.getMonth()&&d.getDate()===n.getDate()}
+function toast(msg){let t=document.getElementById('toast');t.textContent=msg;t.style.display='block';setTimeout(()=>t.style.display='none',3400)}
 function tick(){
-  const d = new Date();
-  document.getElementById('clock').textContent = d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
-  document.getElementById('dateLine').textContent = d.toLocaleDateString([], {weekday:'long', day:'numeric', month:'long'});
+  const d=new Date();
+  document.getElementById('clock').textContent=d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+  document.getElementById('dateLine').textContent=d.toLocaleDateString([],{weekday:'long',day:'numeric',month:'long'});
+  let h=d.getHours(),name=userName?(' '+userName):'';
+  let base=h<12?'Good morning':h<17?'Good afternoon':'Good evening';
+  let opts=[base+name,'Hello'+name,'Hey'+name,base+name];
+  let seed=d.getFullYear()*1000+d.getMonth()*100+d.getDate()+h;
+  let greet=opts[seed%opts.length];
+  let all=allBricks(),open=all.filter(x=>!x.b.done),today=open.filter(x=>x.b.deadline&&isToday(new Date(x.b.deadline))),tomorrow=open.filter(x=>x.b.deadline&&isTomorrow(new Date(x.b.deadline))),prio=open.filter(x=>prioRank(x.b.priority)>=3||prioRank(x.s.priority)>=3);
+  if(today.length>=4||prio.length>=4)greet=`Busy day it is${name?','+name:''}, time to crack those knuckles`;
+  else if(tomorrow.length>=3)greet=`Tomorrow's a busy day${name?','+name:''}, let's get ahead`;
+  else if(today.length>=2)greet=`Today's a busy day${name?','+name:''}`;
+  document.getElementById('greeting').textContent=greet;
+  let ai=document.getElementById('aiLine'),msg='';
+  if(prio.length)msg=`<b>SYC:</b> ${prio.length} priorit${prio.length===1?'y':'ies'} — maybe start at the top.`;
+  else if(today.length)msg=`<b>SYC:</b> ${today.length} due today.`;
+  else if(open.length>=6)msg=`<b>Syc:</b> ${open.length} one by one, isn't it?.`;
+  else if(open.length===0&&all.length>0)msg=`<b>Syc:</b> All clear. Nice work${name?','+name:''}.`;
+  if(msg){ai.innerHTML=msg;ai.classList.add('show')}else ai.classList.remove('show');
+  document.getElementById('wToday').textContent=today.length;
+  document.getElementById('wPrio').textContent=prio.length;
+  document.getElementById('wDone').textContent=all.filter(x=>x.b.done).length;
+  let next=open.filter(x=>x.b.deadline).map(x=>new Date(x.b.deadline)).filter(dt=>dt>=d).sort((a,b)=>a-b)[0];
+  document.getElementById('wNext').textContent=next?next.toLocaleString([],{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}):'—';
+  checkAlerts();
 }
-tick(); setInterval(tick, 30000);
-function getContentText(el){
-  if(!el) return '';
-  let out = '';
-  el.childNodes.forEach(node=>{
-    if(node.nodeType === 3) out += node.textContent;
-    else if(node.nodeName === 'BR') out += '\n';
-    else if(node.nodeName === 'DIV' || node.nodeName === 'P') out += getContentText(node) + '\n';
-    else out += node.textContent || '';
-  });
-  return out.replace(/\n+$/,'');
-}
-let groups = JSON.parse(localStorage.getItem('syc_todo_groups_v4') || 'null');
-if(!groups){
-  const old = JSON.parse(localStorage.getItem('syc_todo_groups_v3') || '[]');
-  if(old.length){
-    groups = old.map(g=>({
-      id: g.id, label: g.label, color: g.color || '#6B8BB8',
-      subGroups: [{id: uid(), label:'General', bricks: g.bricks || []}]
-    }));
-  } else {
-    groups = [];
-  }
-}
-function uid(){ return Math.random().toString(36).slice(2,9) }
-let activeGroupId = localStorage.getItem('syc_active_group') || (groups[0]?.id || null);
-let openDone = JSON.parse(localStorage.getItem('syc_open_done') || '{}');
-function save(){
-  localStorage.setItem('syc_todo_groups_v4', JSON.stringify(groups));
-  localStorage.setItem('syc_open_done', JSON.stringify(openDone));
-  if(activeGroupId) localStorage.setItem('syc_active_group', activeGroupId);
-}
-const canvas = document.getElementById('canvas');
-const tabsEl = document.getElementById('groupTabs');
-const tplMain = document.getElementById('tpl-main');
-const tplSub = document.getElementById('tpl-sub');
-const tplBlock = document.getElementById('tpl-block');
-function countBricks(g){ return g.subGroups.reduce((a,s)=>a + s.bricks.length, 0); }
-function doneBricks(g){ return g.subGroups.reduce((a,s)=>a + s.bricks.filter(b=>b.done).length, 0); }
-function renderTabs(){
-  tabsEl.innerHTML = '';
-  groups.forEach(g=>{
-    const btn = document.createElement('button');
-    btn.className = 'tab' + (g.id===activeGroupId ? ' active' : '');
-    if(g.id===activeGroupId) btn.style.background = g.color || '#6B8BB8';
-    btn.dataset.groupId = g.id;
-    btn.innerHTML = `<span class="dot" style="background:${g.color||'#6B8BB8'}"></span>${g.label || 'Untitled'} <span class="count">${doneBricks(g)}/${countBricks(g)}</span>`;
-    btn.onclick = ()=>{ activeGroupId = g.id; save(); render(); };
-    tabsEl.appendChild(btn);
-  });
-  setTimeout(()=>{ const a = tabsEl.querySelector('.active'); if(a) a.scrollIntoView({inline:'nearest', behavior:'smooth', block:'nearest'}); },50);
-}
-function makeBlockEl(b){
-  const clone = tplBlock.content.cloneNode(true);
-  const el = clone.querySelector('.block');
-  el.dataset.blockId = b.id;
-  el.dataset.type = b.type;
-  if(b.done) el.classList.add('done');
-  const content = el.querySelector('.content');
-  const controls = el.querySelector('.controls');
-  const doneBtn = el.querySelector('.doneBtn');
-  if(b.type==='todo'){ doneBtn.style.display='flex'; doneBtn.textContent = b.done ? '✓' : ''; }
-  if(b.type==='divider'){ content.textContent=''; content.contentEditable='false'; }
-  else { content.textContent = b.text || ''; }
-  const todoC = controls.querySelector('.todoControls');
-  const noteC = controls.querySelector('.noteControls');
-  const doneC = controls.querySelector('.doneControls');
-  if(b.type==='note'){ todoC.style.display='none'; noteC.style.display='contents'; doneC.style.display='none'; controls.querySelectorAll(':scope > .moveBtn').forEach(m=>m.style.display='none'); }
-  else if(b.done){ todoC.style.display='none'; noteC.style.display='none'; doneC.style.display='contents'; controls.querySelectorAll(':scope > .moveBtn').forEach(m=>m.style.display='none'); }
-  else { todoC.style.display='contents'; noteC.style.display='none'; doneC.style.display='none'; controls.querySelectorAll('[data-set-type]').forEach(btn=>{ if(btn.dataset.setType===b.type) btn.classList.add('on'); }); if(b.type!=='todo'){ const md = controls.querySelector('[data-mark-done]'); if(md) md.style.display='none'; } }
+function checkAlerts(){if(!alertsEnabled)return;let now=new Date(),changed=false;allBricks().forEach(({b,s})=>{if(b.done||!b.deadline||b.alerted)return;let dt=new Date(b.deadline);if(dt<=now){b.alerted=true;changed=true;let msg='Due now: '+(b.text||s.label||'Task');toast('⏰ '+msg);if('Notification' in window&&Notification.permission==='granted'){try{new Notification('Syc Todo',{body:msg})}catch(e){}}}});if(changed){save();render()}}
+tick();setInterval(tick,10000);
+function renderTabs(){tabsEl.innerHTML='';[...groups].sort((a,b)=>prioRank(b.priority)-prioRank(a.priority)).forEach(g=>{const btn=document.createElement('button');btn.className='tab'+(g.id===activeGroupId?' active':'');if(g.id===activeGroupId)btn.style.background=g.color||'#6B8BB8';btn.innerHTML=`<span class="dot" style="background:${g.color||'#6B8BB8'}"></span>${prioRank(g.priority)>=4?'★ ':''}${g.label||'Untitled'} <span class="count">${doneBricks(g)}/${countBricks(g)}</span>`;btn.onclick=()=>{syncAllTexts();activeGroupId=g.id;save();render()};tabsEl.appendChild(btn)})}
+function makeBlockEl(b,sub){
+  const clone=tplBlock.content.cloneNode(true),el=clone.querySelector('.block');
+  el.dataset.blockId=b.id;el.dataset.type=b.type;if(b.done)el.classList.add('done');
+  const content=el.querySelector('.content'),controls=el.querySelector('.controls'),doneBtn=el.querySelector('.doneBtn');
+  if(b.type==='todo'){doneBtn.style.display='flex';doneBtn.textContent=b.done?'✓':''}
+  setContentText(content,b.text||'');
+  let meta=el.querySelector('.metaLine');
+  if(b.priority)meta.innerHTML+=`<span class="metaPill">${prioLabel(b.priority)}</span>`;
+  if(b.deadline){let dt=new Date(b.deadline),over=!b.done&&dt<new Date();meta.innerHTML+=`<span class="metaPill ${over?'overdue':''}">⏰ ${dt.toLocaleString([],{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})}</span>`}
+  if(b.type==='note'&&b.linkedTodoId){let t=sub.bricks.find(x=>x.id===b.linkedTodoId);if(t)meta.innerHTML+=`<span class="metaPill">🔗 ${(t.text||'Todo').slice(0,28)}</span>`}
+  if(b.type==='note'){controls.querySelector('.todoControls').style.display='none';let sel=controls.querySelector('[data-link-note]');sel.style.display='block';sub.bricks.filter(x=>x.type==='todo').forEach(t=>{let o=document.createElement('option');o.value=t.id;o.textContent=(t.text||'Todo').slice(0,40)||'Todo';if(b.linkedTodoId===t.id)o.selected=true;sel.appendChild(o)})}
+  else if(b.done){controls.querySelector('.todoControls').style.display='none';controls.querySelector('.doneControls').style.display='contents'}
+  else{controls.querySelectorAll('[data-set-type]').forEach(btn=>{if(btn.dataset.setType===b.type)btn.classList.add('on')});if(b.type!=='todo'){let md=controls.querySelector('[data-mark-done]');if(md)md.style.display='none'}}
+  let ps=controls.querySelector('[data-prio-select]');if(ps)ps.value=b.priority||'';
+  let dl=controls.querySelector('[data-deadline]');if(dl)dl.value=b.deadline||'';
   return el;
 }
 function render(){
-  renderTabs();
-  canvas.innerHTML = '';
-  if(groups.length===0){ canvas.innerHTML = `<div class="emptyWrap">Let's build the day!.<br><button onclick="addGroup()">+ Create your first group</button><br><span style="font-size:13px">e.g. Plans, Travel, Ideas, Daily</span></div>`; return; }
-  if(!activeGroupId || !groups.find(g=>g.id===activeGroupId)) activeGroupId = groups[0].id;
-  const g = groups.find(x=>x.id===activeGroupId);
-  const mClone = tplMain.content.cloneNode(true);
-  const mEl = mClone.querySelector('.mainGroup');
-  mEl.dataset.groupId = g.id;
-  const mainLabel = mEl.querySelector('.mainLabel');
-  mainLabel.textContent = g.label || '';
-  mEl.querySelector('.mainColorBtn').style.background = g.color || '#6B8BB8';
-  mEl.querySelector('.mainColorBtn').style.color = '#fff';
-  mEl.querySelectorAll('.colorRow button').forEach(b=>{ if(b.dataset.color===g.color) b.classList.add('on'); });
-  const wrap = mEl.querySelector('.subGroupsWrap');
-  if(!g.subGroups || g.subGroups.length===0){ wrap.innerHTML = `<div class="emptyWrap" style="padding:24px">No sub-groups yet.<br><button onclick="addSubGroupToActive()">+ Create sub-group</button><br><span style="font-size:13px">e.g. Travel to Malawi, Travel to Madagascar</span></div>`; }
-  (g.subGroups||[]).forEach(sub=>{
-    const sClone = tplSub.content.cloneNode(true);
-    const sEl = sClone.querySelector('.subGroup');
-    sEl.dataset.subId = sub.id;
-    sEl.style.borderLeftColor = g.color || '#6B8BB8';
-    const subLabel = sEl.querySelector('.subLabel');
-    subLabel.textContent = sub.label || '';
-    const done = sub.bricks.filter(b=>b.done).length;
-    sEl.querySelector('.subCount').textContent = `${done}/${sub.bricks.length} done`;
-    const bricksWrap = sEl.querySelector('.subBricks');
-    const doneSection = sEl.querySelector('.doneSection');
-    const doneList = sEl.querySelector('.doneList');
-    const doneToggle = sEl.querySelector('.doneToggle');
-    const activeBricks = sub.bricks.filter(b=>!b.done);
-    const doneBricksArr = sub.bricks.filter(b=>b.done);
-    if(activeBricks.length===0 && doneBricksArr.length===0){ bricksWrap.innerHTML = `<div class="subEmpty">No bricks yet. Tap + Todo or + Note below.</div>`; } else { activeBricks.forEach(b=> bricksWrap.appendChild(makeBlockEl(b))); }
-    if(doneBricksArr.length>0){ doneSection.style.display='flex'; const isOpen = !!openDone[sub.id]; doneToggle.innerHTML = `✓ <b>Done (${done})</b> — ${isOpen ? 'tap to hide ▲' : 'tap to show ▼'}`; if(isOpen) doneList.classList.remove('hidden'); else doneList.classList.add('hidden'); doneBricksArr.forEach(b=> doneList.appendChild(makeBlockEl(b))); } else { doneSection.style.display='none'; }
+  renderTabs();canvas.innerHTML='';
+  if(groups.length===0){canvas.innerHTML=`<div class="emptyWrap"> Got any tasks today ?<br> time to get it done!.<br><button onclick="addGroup()">+ Create your first group</button></div>`;tick();return}
+  if(!activeGroupId||!groups.find(g=>g.id===activeGroupId))activeGroupId=groups[0].id;
+  const g=groups.find(x=>x.id===activeGroupId);
+  const mClone=tplMain.content.cloneNode(true),mEl=mClone.querySelector('.mainGroup');
+  mEl.dataset.groupId=g.id;mEl.querySelector('.mainLabel').textContent=g.label||'';
+  let pb=mEl.querySelector('[data-prio-group]');pb.textContent=prioLabel(g.priority);pb.className='prioBadge '+(g.priority||'');
+  mEl.querySelector('.mainColorBtn').style.background=g.color||'#6B8BB8';mEl.querySelector('.mainColorBtn').style.color='#fff';
+  mEl.querySelectorAll('.colorRow button').forEach(b=>{if(b.dataset.color===g.color)b.classList.add('on')});
+  const wrap=mEl.querySelector('.subGroupsWrap');
+  if(!g.subGroups||g.subGroups.length===0)wrap.innerHTML=`<div class="emptyWrap" style="padding:20px">No sub-groups yet.<br><button onclick="addSubGroupToActive()">+ Create sub-group</button></div>`;
+  [...g.subGroups].sort((a,b)=>prioRank(b.priority)-prioRank(a.priority)).forEach(sub=>{
+    const sClone=tplSub.content.cloneNode(true),sEl=sClone.querySelector('.subGroup');
+    sEl.dataset.subId=sub.id;sEl.style.borderLeftColor=g.color||'#6B8BB8';
+    let sp=sEl.querySelector('[data-prio-sub]');sp.textContent=prioLabel(sub.priority);sp.className='prioBadge '+(sub.priority||'');
+    sEl.querySelector('.subLabel').textContent=sub.label||'';
+    const done=sub.bricks.filter(b=>b.done).length;
+    sEl.querySelector('.subCount').textContent=`${done}/${sub.bricks.length} done`;
+    const bricksWrap=sEl.querySelector('.subBricks'),doneSection=sEl.querySelector('.doneSection'),doneList=sEl.querySelector('.doneList'),doneToggle=sEl.querySelector('.doneToggle');
+    let activeBricks=sub.bricks.filter(b=>!b.done).sort((a,b)=>prioRank(b.priority)-prioRank(a.priority));
+    let doneBricksArr=sub.bricks.filter(b=>b.done);
+    if(activeBricks.length===0&&doneBricksArr.length===0)bricksWrap.innerHTML=`<div class="subEmpty">Tap + Todo or + Note below.</div>`;else activeBricks.forEach(b=>bricksWrap.appendChild(makeBlockEl(b,sub)));
+    if(doneBricksArr.length>0){doneSection.style.display='flex';const isOpen=!!openDone[sub.id];doneToggle.innerHTML=`✓ <b>Done (${done})</b> — ${isOpen?'tap to hide ▲':'tap to show ▼'}`;doneList.classList.toggle('hidden',!isOpen);doneBricksArr.forEach(b=>doneList.appendChild(makeBlockEl(b,sub)))}else doneSection.style.display='none';
     wrap.appendChild(sEl);
   });
-  canvas.appendChild(mEl);
+  canvas.appendChild(mEl);tick();
 }
-function addGroup(){
-  const colors = ['#6B8BB8','#8AB17D','#C98A7A','#C08AB5','#9B8AC4','#C9B67A','#7FB3C8','#8A9BA8'];
-  const g = {id: uid(), label:'', color: colors[groups.length % colors.length], subGroups: []};
-  groups.push(g); activeGroupId = g.id; save(); render();
-  setTimeout(()=>{ const el = canvas.querySelector(`[data-group-id="${g.id}"] .mainLabel`); if(el) el.focus(); },30);
-}
-function addSubGroupToActive(){
-  if(groups.length===0){ addGroup(); setTimeout(()=>addSubGroupToActive(),60); return; }
-  const g = groups.find(x=>x.id===activeGroupId); if(!g) return;
-  const sub = {id: uid(), label:'', bricks:[]};
-  g.subGroups.push(sub); save(); render();
-  setTimeout(()=>{ const el = canvas.querySelector(`[data-sub-id="${sub.id}"] .subLabel`); if(el) el.focus(); },30);
-}
-function addBrick(subId, type, atIndex=null){
-  for(const g of groups){
-    const sub = g.subGroups.find(s=>s.id===subId);
-    if(sub){
-      const nb = {id:uid(), type, text:'', done:false};
-      if(atIndex===null) sub.bricks.push(nb); else sub.bricks.splice(atIndex,0,nb);
-      save(); render();
-      setTimeout(()=>{ const el = canvas.querySelector(`[data-block-id="${nb.id}"] .content`); if(el) el.focus(); },30);
-      return;
-    }
-  }
-}
-function findBrick(id){
-  for(const g of groups){
-    for(const sub of g.subGroups){
-      const idx = sub.bricks.findIndex(b=>b.id===id);
-      if(idx!==-1) return {group:g, sub, idx, brick:sub.bricks[idx]};
-    }
-  }
-  return null;
-}
-function moveBrick(id, dir){
-  const f = findBrick(id); if(!f) return;
-  const list = f.sub.bricks.filter(b=>b.done === f.brick.done);
-  const posInList = list.findIndex(b=>b.id===id);
-  const newPos = posInList + dir;
-  if(newPos < 0 || newPos >= list.length) return;
-  const targetId = list[newPos].id;
-  const idxA = f.sub.bricks.findIndex(b=>b.id===id);
-  const idxB = f.sub.bricks.findIndex(b=>b.id===targetId);
-  const tmp = f.sub.bricks[idxA];
-  f.sub.bricks[idxA] = f.sub.bricks[idxB];
-  f.sub.bricks[idxB] = tmp;
-  save(); render();
-}
-function markDone(id, done){
-  const f = findBrick(id); if(!f) return;
-  f.brick.done = done;
-  save(); render();
-  if(done) { openDone[f.sub.id] = true; save(); render(); }
-}
-document.addEventListener('click', e=>{
-  if(!e.target.closest('.block') && !e.target.closest('.mainHead') && !e.target.closest('.subHead') && !e.target.closest('#addBar') && !e.target.closest('#sheetCard') && !e.target.closest('.tab') && !e.target.closest('.colorRow') && !e.target.closest('.doneToggle')){
-    document.querySelectorAll('.block').forEach(x=>x.classList.remove('active'));
-    document.querySelectorAll('.mainGroup').forEach(x=>x.classList.remove('showColors'));
-  }
-}, true);
-canvas.addEventListener('click', e=>{
-  const del = e.target.closest('.del');
-  const typeBtn = e.target.closest('[data-set-type]');
-  const moveBtn = e.target.closest('[data-move]');
-  const addInSub = e.target.closest('[data-add-in-sub]');
-  const groupDel = e.target.closest('[data-group-del]');
-  const subDel = e.target.closest('[data-sub-del]');
-  const colorToggle = e.target.closest('[data-color-toggle]');
-  const colorPick = e.target.closest('[data-color]');
-  const doneToggle = e.target.closest('[data-done-toggle]');
-  const doneBtn = e.target.closest('[data-done-btn]');
-  const markDoneBtn = e.target.closest('[data-mark-done]');
-  const undoBtn = e.target.closest('[data-undo-done]');
-  const blockEl = e.target.closest('.block');
-  if(doneToggle){ const sEl = e.target.closest('.subGroup'); if(!sEl) return; const subId = sEl.dataset.subId; openDone[subId] = !openDone[subId]; save(); render(); return; }
-  if(colorPick){ const gEl = e.target.closest('.mainGroup'); if(!gEl) return; const g = groups.find(x=>x.id===gEl.dataset.groupId); if(!g) return; g.color = colorPick.dataset.color; save(); render(); return; }
-  if(colorToggle){ const gEl = e.target.closest('.mainGroup'); if(!gEl) return; gEl.classList.toggle('showColors'); return; }
-  if(addInSub){ const sEl = e.target.closest('.subGroup'); if(!sEl) return; addBrick(sEl.dataset.subId, addInSub.dataset.addInSub); return; }
-  if(groupDel){ const gEl = e.target.closest('.mainGroup'); if(!gEl) return; if(!confirm('Delete this whole group and its sub-groups?')) return; groups = groups.filter(g=>g.id!==gEl.dataset.groupId); if(activeGroupId===gEl.dataset.groupId) activeGroupId = groups[0]?.id || null; save(); render(); return; }
-  if(subDel){ const sEl = e.target.closest('.subGroup'); if(!sEl) return; if(!confirm('Delete this sub-group?')) return; const g = groups.find(x=>x.id===activeGroupId); if(!g) return; g.subGroups = g.subGroups.filter(s=>s.id!==sEl.dataset.subId); save(); render(); return; }
-  if(doneBtn && blockEl){ e.stopPropagation(); markDone(blockEl.dataset.blockId, true); return; }
-  if(markDoneBtn && blockEl){ e.stopPropagation(); markDone(blockEl.dataset.blockId, true); return; }
-  if(undoBtn && blockEl){ e.stopPropagation(); markDone(blockEl.dataset.blockId, false); return; }
-  if(moveBtn && blockEl){ e.stopPropagation(); moveBrick(blockEl.dataset.blockId, parseInt(moveBtn.dataset.move,10)); return; }
-  if(del && blockEl){ const f = findBrick(blockEl.dataset.blockId); if(!f) return; f.sub.bricks.splice(f.idx,1); save(); render(); return; }
-  if(typeBtn && blockEl){ const f = findBrick(blockEl.dataset.blockId); if(!f) return; f.brick.type = typeBtn.dataset.setType; if(f.brick.type!=='todo') f.brick.done=false; save(); render(); return; }
-  if(blockEl){ e.stopPropagation(); document.querySelectorAll('.block').forEach(x=>x.classList.remove('active')); blockEl.classList.add('active'); }
+function addGroup(){syncAllTexts();const colors=['#6B8BB8','#8AB17D','#C98A7A','#C08AB5','#9B8AC4','#C9B67A','#7FB3C8','#8A9BA8'];const g={id:uid(),label:'',color:colors[groups.length%colors.length],priority:'',subGroups:[]};groups.push(g);activeGroupId=g.id;save();render();setTimeout(()=>{const el=canvas.querySelector(`[data-group-id="${g.id}"] .mainLabel`);if(el)el.focus()},30)}
+function addSubGroupToActive(){syncAllTexts();if(groups.length===0){addGroup();setTimeout(addSubGroupToActive,60);return}const g=groups.find(x=>x.id===activeGroupId);if(!g)return;const sub={id:uid(),label:'',priority:'',bricks:[]};g.subGroups.push(sub);save();render();setTimeout(()=>{const el=canvas.querySelector(`[data-sub-id="${sub.id}"] .subLabel`);if(el)el.focus()},30)}
+function addBrick(subId,type){syncAllTexts();for(const g of groups){const sub=g.subGroups.find(s=>s.id===subId);if(sub){const nb={id:uid(),type,text:'',done:false,priority:'',deadline:'',alerted:false,linkedTodoId:''};sub.bricks.push(nb);save();render();setTimeout(()=>{const el=canvas.querySelector(`[data-block-id="${nb.id}"] .content`);if(el)el.focus()},30);return}}}
+function findBrick(id){for(const g of groups)for(const sub of g.subGroups){const idx=sub.bricks.findIndex(b=>b.id===id);if(idx!==-1)return{group:g,sub,idx,brick:sub.bricks[idx]}}return null}
+function moveBrick(id,dir){syncAllTexts();const f=findBrick(id);if(!f)return;const list=f.sub.bricks.filter(b=>b.done===f.brick.done);const pos=list.findIndex(b=>b.id===id),newPos=pos+dir;if(newPos<0||newPos>=list.length)return;const targetId=list[newPos].id,idxA=f.sub.bricks.findIndex(b=>b.id===id),idxB=f.sub.bricks.findIndex(b=>b.id===targetId);const tmp=f.sub.bricks[idxA];f.sub.bricks[idxA]=f.sub.bricks[idxB];f.sub.bricks[idxB]=tmp;save();render()}
+function moveSub(subId,dir){syncAllTexts();const g=groups.find(x=>x.id===activeGroupId);if(!g)return;let idx=g.subGroups.findIndex(s=>s.id===subId),nidx=idx+dir;if(nidx<0||nidx>=g.subGroups.length)return;let tmp=g.subGroups[idx];g.subGroups[idx]=g.subGroups[nidx];g.subGroups[nidx]=tmp;save();render()}
+function cyclePrio(cur){let order=['','low','medium','high','important'];return order[(order.indexOf(cur||'')+1)%order.length]}
+function markDone(id,done){syncAllTexts();const f=findBrick(id);if(!f)return;f.brick.done=done;if(f.brick.type==='todo')f.sub.bricks.forEach(b=>{if(b.type==='note'&&b.linkedTodoId===id)b.done=done});save();if(done)playDoneSound();render();if(done){openDone[f.sub.id]=true;save();render()}}
+document.addEventListener('click',e=>{if(!e.target.closest('.block')&&!e.target.closest('.mainHead')&&!e.target.closest('.subHead')&&!e.target.closest('#addBar')&&!e.target.closest('#sheetCard')&&!e.target.closest('.tab')&&!e.target.closest('.colorRow')&&!e.target.closest('.doneToggle')&&!e.target.closest('.prioBadge')){document.querySelectorAll('.block').forEach(x=>x.classList.remove('active'));document.querySelectorAll('.mainGroup').forEach(x=>x.classList.remove('showColors'))}},true);
+canvas.addEventListener('click',e=>{
+  const del=e.target.closest('.del'),typeBtn=e.target.closest('[data-set-type]'),moveBtn=e.target.closest('[data-move]'),addInSub=e.target.closest('[data-add-in-sub]'),groupDel=e.target.closest('[data-group-del]'),subDel=e.target.closest('[data-sub-del]'),colorToggle=e.target.closest('[data-color-toggle]'),colorPick=e.target.closest('[data-color]'),doneToggle=e.target.closest('[data-done-toggle]'),doneBtn=e.target.closest('[data-done-btn]'),markDoneBtn=e.target.closest('[data-mark-done]'),undoBtn=e.target.closest('[data-undo-done]'),prioG=e.target.closest('[data-prio-group]'),prioS=e.target.closest('[data-prio-sub]'),subMove=e.target.closest('[data-sub-move]'),blockEl=e.target.closest('.block');
+  if(prioG){syncAllTexts();const g=groups.find(x=>x.id===e.target.closest('.mainGroup').dataset.groupId);if(g){g.priority=cyclePrio(g.priority);save();render()}return}
+  if(prioS){syncAllTexts();const s=groups.flatMap(g=>g.subGroups).find(s=>s.id===e.target.closest('.subGroup').dataset.subId);if(s){s.priority=cyclePrio(s.priority);save();render()}return}
+  if(subMove){moveSub(e.target.closest('.subGroup').dataset.subId,parseInt(subMove.dataset.subMove));return}
+  if(doneToggle){syncAllTexts();const sEl=e.target.closest('.subGroup');if(sEl){openDone[sEl.dataset.subId]=!openDone[sEl.dataset.subId];save();render()}return}
+  if(colorPick){syncAllTexts();const g=groups.find(x=>x.id===e.target.closest('.mainGroup').dataset.groupId);if(g){g.color=colorPick.dataset.color;save();render()}return}
+  if(colorToggle){e.target.closest('.mainGroup').classList.toggle('showColors');return}
+  if(addInSub){addBrick(e.target.closest('.subGroup').dataset.subId,addInSub.dataset.addInSub);return}
+  if(groupDel){syncAllTexts();if(!confirm('Delete this whole group?'))return;groups=groups.filter(g=>g.id!==e.target.closest('.mainGroup').dataset.groupId);activeGroupId=groups[0]?.id||null;save();render();return}
+  if(subDel){syncAllTexts();if(!confirm('Delete this sub-group?'))return;const g=groups.find(x=>x.id===activeGroupId);if(g){g.subGroups=g.subGroups.filter(s=>s.id!==e.target.closest('.subGroup').dataset.subId);save();render()}return}
+  if(doneBtn&&blockEl){e.stopPropagation();markDone(blockEl.dataset.blockId,true);return}
+  if(markDoneBtn&&blockEl){e.stopPropagation();markDone(blockEl.dataset.blockId,true);return}
+  if(undoBtn&&blockEl){e.stopPropagation();markDone(blockEl.dataset.blockId,false);return}
+  if(moveBtn&&blockEl){e.stopPropagation();moveBrick(blockEl.dataset.blockId,parseInt(moveBtn.dataset.move,10));return}
+  if(del&&blockEl){syncAllTexts();const f=findBrick(blockEl.dataset.blockId);if(f){f.sub.bricks.splice(f.idx,1);save();render()}return}
+  if(typeBtn&&blockEl){syncAllTexts();const f=findBrick(blockEl.dataset.blockId);if(f){f.brick.type=typeBtn.dataset.setType;if(f.brick.type!=='todo')f.brick.done=false;save();render()}return}
+  if(blockEl){e.stopPropagation();document.querySelectorAll('.block').forEach(x=>x.classList.remove('active'));blockEl.classList.add('active')}
 });
-canvas.addEventListener('input', e=>{
-  if(e.target.classList.contains('mainLabel')){ const g = groups.find(x=>x.id===e.target.closest('.mainGroup').dataset.groupId); if(g){ g.label = e.target.textContent; save(); renderTabs(); } return; }
-  if(e.target.classList.contains('subLabel')){ const f = groups.flatMap(g=>g.subGroups).find(s=>s.id===e.target.closest('.subGroup').dataset.subId); if(f){ f.label = e.target.textContent; save(); } return; }
-  const blockEl = e.target.closest('.block'); if(!blockEl) return;
-  const f = findBrick(blockEl.dataset.blockId); if(!f) return;
-  f.brick.text = getContentText(e.target);
-  save();
+canvas.addEventListener('change',e=>{const blockEl=e.target.closest('.block');if(!blockEl)return;syncAllTexts();const f=findBrick(blockEl.dataset.blockId);if(!f)return;if(e.target.matches('[data-prio-select]')){f.brick.priority=e.target.value;save();render()}if(e.target.matches('[data-deadline]')){f.brick.deadline=e.target.value;f.brick.alerted=false;save();render()}if(e.target.matches('[data-link-note]')){f.brick.linkedTodoId=e.target.value;save();render()}});
+canvas.addEventListener('input',e=>{
+  if(e.target.classList.contains('mainLabel')){const g=groups.find(x=>x.id===e.target.closest('.mainGroup').dataset.groupId);if(g){g.label=e.target.textContent;save();renderTabs()}return}
+  if(e.target.classList.contains('subLabel')){const f=groups.flatMap(g=>g.subGroups).find(s=>s.id===e.target.closest('.subGroup').dataset.subId);if(f){f.label=e.target.textContent;save()}return}
+  const blockEl=e.target.closest('.block');if(!blockEl)return;const f=findBrick(blockEl.dataset.blockId);if(!f)return;f.brick.text=getContentText(e.target);save();
 });
-canvas.addEventListener('keydown', e=>{
-  if(e.key!=='Enter') return;
-  const blockEl = e.target.closest('.block'); if(!blockEl) return;
-  const f = findBrick(blockEl.dataset.blockId); if(!f) return;
-  if(f.brick.type==='note') return;
-  if(!e.shiftKey){ e.preventDefault(); const nb = {id:uid(), type:'todo', text:'', done:false}; f.sub.bricks.splice(f.idx+1,0,nb); save(); render(); setTimeout(()=>{ const el = canvas.querySelector(`[data-block-id="${nb.id}"] .content`); if(el) el.focus(); },30); }
-});
-let dragId=null;
-canvas.addEventListener('dragstart', e=>{ const b = e.target.closest('.block'); if(!b) return; dragId = b.dataset.blockId; b.classList.add('dragging'); });
-canvas.addEventListener('dragend', ()=>{ dragId=null; document.querySelectorAll('.block').forEach(x=>x.classList.remove('dragging')); });
-canvas.addEventListener('dragover', e=>{ e.preventDefault(); if(!dragId) return; const over = e.target.closest('.block'); if(!over || over.dataset.blockId===dragId) return; const rect = over.getBoundingClientRect(); const after = (e.clientY - rect.top) > rect.height/2; const draggingEl = canvas.querySelector(`[data-block-id="${dragId}"]`); if(after) over.after(draggingEl); else over.before(draggingEl); });
-canvas.addEventListener('drop', e=>{ e.preventDefault(); if(!dragId) return; document.querySelectorAll('.subGroup').forEach(sEl=>{ const sub = groups.flatMap(g=>g.subGroups).find(s=>s.id===sEl.dataset.subId); if(!sub) return; const order = [...sEl.querySelectorAll('.block')].map(el=>el.dataset.blockId); sub.bricks.sort((a,b)=> order.indexOf(a.id) - order.indexOf(b.id)); }); save(); render(); });
-let touchStartX = null, touchStartY = null;
-canvas.addEventListener('touchstart', e=>{ if(e.target.closest('.block') || e.target.closest('.mainHead') || e.target.closest('.subHead')) return; touchStartX = e.touches[0].clientX; touchStartY = e.touches[0].clientY; }, {passive:true});
-canvas.addEventListener('touchend', e=>{ if(touchStartX===null) return; const dx = e.changedTouches[0].clientX - touchStartX; const dy = e.changedTouches[0].clientY - touchStartY; touchStartX = null; touchStartY = null; if(Math.abs(dx) < 70 || Math.abs(dy) > 60) return; const idx = groups.findIndex(g=>g.id===activeGroupId); if(idx===-1) return; let next = idx; if(dx < 0) next = Math.min(groups.length-1, idx+1); else next = Math.max(0, idx-1); if(next!==idx){ activeGroupId = groups[next].id; save(); render(); } }, {passive:true});
-function pageText(){
-  return groups.map(g=>{
-    const head = g.label ? `\n## ${g.label}\n` : '';
-    const subs = g.subGroups.map(sub=>{
-      const sh = sub.label ? `\n### ${sub.label}\n` : '';
-      const body = sub.bricks.map(b=>{
-        if(b.type==='heading') return b.text;
-        if(b.type==='todo') return (b.done ? '✅ ' : '⬜ ') + b.text;
-        if(b.type==='divider') return '---';
-        return b.text;
-      }).join('\n');
-      return sh + body;
-    }).join('\n');
-    return head + subs;
-  }).join('\n');
-}
-async function shareOut(){
-  const text = pageText();
-  if(navigator.share){ try{ await navigator.share({title:'My Day — SYC Todo', text, url: location.href}); return; }catch(e){ return; } }
-  try{ await navigator.clipboard.writeText(text + '\n\n' + location.href); alert('Copied!'); }catch(e){ prompt('Copy:', text); }
-}
-function shareToSYC(app){
-  const base = { letter:'https://sycrar.github.io/letter-w-syc/' }[app];
-  window.open(base + '?text=' + encodeURIComponent(pageText()) + '&from=syc_todo','_blank');
-  closeSheet();
-}
-function openSheet(){ document.getElementById('sheet').classList.add('show'); }
-function closeSheet(){ document.getElementById('sheet').classList.remove('show'); }
-(function(){
-  const p = new URLSearchParams(location.search);
-  const t = p.get('text');
-  if(t && groups.length===0){
-    window.history.replaceState({},'',location.pathname);
-    groups = [{id:uid(), label:'Plans', color:'#6B8BB8', subGroups:[{id:uid(), label:'General', bricks: t.split('\n').filter(Boolean).map(line=>{
-      const clean = line.replace(/^  +/,'').trim();
-      if(clean.startsWith('✅')||clean.startsWith('⬜')) return {id:uid(), type:'todo', text: clean.replace(/^[✅⬜ ]+/,'').trim(), done: clean.startsWith('✅')};
-      return {id:uid(), type:'note', text: clean, done:false};
-    })}]}];
-    activeGroupId = groups[0].id;
-    save();
-  }
+canvas.addEventListener('keydown',e=>{if(e.key!=='Enter')return;const blockEl=e.target.closest('.block');if(!blockEl)return;const f=findBrick(blockEl.dataset.blockId);if(!f||f.brick.type==='note')return;syncAllTexts();if(!e.shiftKey){e.preventDefault();const nb={id:uid(),type:'todo',text:'',done:false,priority:'',deadline:'',alerted:false,linkedTodoId:''};f.sub.bricks.splice(f.idx+1,0,nb);save();render();setTimeout(()=>{const el=canvas.querySelector(`[data-block-id="${nb.id}"] .content`);if(el)el.focus()},30)}});
+let touchStartX=null,touchStartY=null;
+canvas.addEventListener('touchstart',e=>{if(e.target.closest('.block')||e.target.closest('.mainHead')||e.target.closest('.subHead'))return;touchStartX=e.touches[0].clientX;touchStartY=e.touches[0].clientY},{passive:true});
+canvas.addEventListener('touchend',e=>{if(touchStartX===null)return;const dx=e.changedTouches[0].clientX-touchStartX,dy=e.changedTouches[0].clientY-touchStartY;touchStartX=null;touchStartY=null;if(Math.abs(dx)<70||Math.abs(dy)>60)return;syncAllTexts();const idx=groups.findIndex(g=>g.id===activeGroupId);if(idx===-1)return;let next=idx;if(dx<0)next=Math.min(groups.length-1,idx+1);else next=Math.max(0,idx-1);if(next!==idx){activeGroupId=groups[next].id;save();render()}},{passive:true});
+async function shareOut(){const url=location.href;if(navigator.share){try{await navigator.share({title:'SYC Todo',text:'SYC Todo',url});return}catch(e){return}}try{await navigator.clipboard.writeText(url);toast('Link copied!')}catch(e){prompt('Copy link:',url)}}
+function openSheet(){document.getElementById('sheet').classList.add('show');document.getElementById('nameInput').value=userName||'';updateAlertsBtn()}
+function closeSheet(){document.getElementById('sheet').classList.remove('show')}
+(function(){const p=new URLSearchParams(location.search),t=p.get('text');if(t&&groups.length===0){window.history.replaceState({},'',location.pathname);groups=[{id:uid(),label:'Plans',color:'#6B8BB8',priority:'',subGroups:[{id:uid(),label:'General',priority:'',bricks:t.split('\n').filter(Boolean).map(line=>{const clean=line.trim();if(clean.startsWith('✅')||clean.startsWith('⬜'))return{id:uid(),type:'todo',text:clean.replace(/^[✅⬜ ]+/,'').trim(),done:clean.startsWith('✅'),priority:'',deadline:'',alerted:false,linkedTodoId:''};return{id:uid(),type:'note',text:clean,done:false,priority:'',deadline:'',alerted:false,linkedTodoId:''}})}]}];activeGroupId=groups[0].id;save()}
+if(!userName&&groups.length===0)setTimeout(()=>{openSheet();toast('Welcome — add your name for personal greetings')},600);
 })();
 render();
 </script>
-
 <script>
-// PWA Install logic
-let deferredPrompt = null;
-const installBtn = document.getElementById('installBtn');
-const iosHint = document.getElementById('iosHint');
-const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
-const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
-
-if(isIOS && !isStandalone){
-  iosHint.style.display = 'block';
-}
-window.addEventListener('beforeinstallprompt', (e)=>{
-  e.preventDefault();
-  deferredPrompt = e;
-  installBtn.style.display = 'block';
-});
-async function installApp(){
-  if(!deferredPrompt) return;
-  deferredPrompt.prompt();
-  const { outcome } = await deferredPrompt.userChoice;
-  deferredPrompt = null;
-  installBtn.style.display = 'none';
-}
-window.addEventListener('appinstalled', ()=>{
-  installBtn.style.display = 'none';
-  deferredPrompt = null;
-});
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('sw.js').then(()=>console.log('SYC Todo PWA ready')).catch(()=>{});
-  });
-}
+let deferredPrompt=null;const installBtn=document.getElementById('installBtn'),iosHint=document.getElementById('iosHint'),isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent),isStandalone=window.matchMedia('(display-mode: standalone)').matches||window.navigator.standalone===true;
+if(isIOS&&!isStandalone)iosHint.style.display='block';
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredPrompt=e;installBtn.style.display='block'});
+async function installApp(){if(!deferredPrompt)return;deferredPrompt.prompt();await deferredPrompt.userChoice;deferredPrompt=null;installBtn.style.display='none'}
+window.addEventListener('appinstalled',()=>{installBtn.style.display='none';deferredPrompt=null});
+if('serviceWorker' in navigator){window.addEventListener('load',()=>{navigator.serviceWorker.register('sw.js').catch(()=>{})})}
 </script>
 </body>
 </html>
